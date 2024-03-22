@@ -125,7 +125,7 @@ AGAPE has captured and imprisoned your conscience in their Finite Domain and say
 ## Storyboarding
 
 Menu Screen
-![../assets/Menu_Screen.png](A picture of the Menu Screen)
+![A picture of the Menu Screen](../assets/Menu_Screen.png)
 
 Level Screen
 
