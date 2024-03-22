@@ -128,16 +128,19 @@ Menu Screen
 ![A picture of the Menu Screen](../assets/Menu_Screen.png)
 
 Level Screen
+![A picture of the Level Screen](../assets/Level_Screen.png)
 
 Analyze Screen
+![A picture of the Analyze Screen](../assets/Analyze_Screen.png)
 
 Build Screen
+![A picture of the Build Screen](../assets/Build_Screen.png)
 
 Accept State Screen
+![A picture of the Accept State Screen](../assets/Accept_State_Screen.png)
 
 Junk State Screen
-
-
+![A picture of the Junk State Screen](../assets/Junk_State_Screen.png)
 
 # Assets Needed
 
@@ -168,4 +171,4 @@ Minimalistic Future Retro Puzzle Game, a hybrid feeling of nostalgia and new tha
   - Button Click “Play”, “Run”: Neutral ping sound
   - Button Click “Exit: Lower tone ping sound
   - Pass Section/Level: Light ding sound
-  - Fail Section/Level: Deep buzz sound
+  - Fail Section/Level: Heavy buzz sound
