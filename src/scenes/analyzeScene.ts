@@ -16,6 +16,7 @@ export default class analyzeScene extends Phaser.Scene {
     private stringButtons: Phaser.GameObjects.Text[] = [];
     private toggleButtons: boolean[] = [];
     private acceptButtons: boolean[] = [];
+    private machine: stringFSM;
 
     constructor() {
         super({ key: "analyzeScene" });
@@ -56,15 +57,15 @@ export default class analyzeScene extends Phaser.Scene {
         const buttonHeight: number = 60;
         const startX: number = 300; // Starting X position for the first button
         const startY: number = 300; // Starting Y position for the first button
-        console.log("Level: " + String(this.levelNum));
-        let machine: stringFSM = this.getLevels()[this.levelNum];
-        this.add.text(100, 140, `${machine.getLanguageDescriptionFSM()}`, {
+        console.log("Level: " + String(this.levelNum + 1));
+        this.machine = this.getLevels()[this.levelNum];
+        this.add.text(100, 140, `${this.machine.getLanguageDescriptionFSM()}`, {
             color: this.BLACK,
             fontSize: "30px",
         });
-        let values: string[] = machine.generateStrings(numRows * numCols);
+        let values: string[] = this.machine.generateStrings(numRows * numCols);
         console.log(values);
-        this.acceptButtons = machine.checkStrings(values);
+        this.acceptButtons = this.machine.checkStrings(values);
         let count: number = 0;
         for (let row = 0; row < numRows; row++) {
             for (let col = 0; col < numCols; col++) {
@@ -177,6 +178,14 @@ export default class analyzeScene extends Phaser.Scene {
             button.input!.enabled = enabled;
             // Optionally, change the visual style to indicate disabled/enabled state
             button.setStyle({ color: enabled ? "#000000" : "#757575" }); // Change text color as an example
+        });
+    }
+
+    private randomizeButtonLabels(): void {
+        this.stringButtons.forEach((button, index) => {
+            let result: string = this.machine.generateString();
+            this.toggleButtons[index];
+            button.setText(result);
         });
     }
 

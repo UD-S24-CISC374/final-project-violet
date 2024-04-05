@@ -41,28 +41,45 @@ export default class levelScene extends Phaser.Scene {
         let count: number = 0;
         for (let row = 0; row < numRows; row++) {
             for (let col = 0; col < numCols; col++) {
-                this.levelNum = row * numCols + col + 1;
-                this.dataToPass.level = this.levelNum;
-                const buttonLabel = "Level " + this.levelNum;
                 const buttonX = startX + col * (buttonWidth + padding);
                 const buttonY = startY + row * (buttonHeight + padding);
-                console.log("Level: " + String(this.levelNum));
-                this.buttons[count] = this.add
-                    .text(buttonX, buttonY, buttonLabel, {
-                        backgroundColor: "#fff",
-                        color: "#000",
-                        fontSize: "20px",
-                    })
-                    .setPadding(10)
-                    .setInteractive();
-                this.buttons[count].on("pointerdown", () =>
-                    this.scene.start("analyzeScene", {
-                        level: 1, //this.levelNum,
-                        lives: 5,
-                    })
-                );
+                this.createButton(buttonX, buttonY, count);
                 count++;
             }
         }
+    }
+
+    private createButton(x: number, y: number, levelNum: number): void {
+        const buttonLabel = `Level ${levelNum + 1}`; // Adjusted for human-readable level numbering
+        const button = this.add
+            .text(x, y, buttonLabel, {
+                backgroundColor: "#fff",
+                color: "#000",
+                fontSize: "20px",
+            })
+            .setPadding(10)
+            .setInteractive();
+
+        button.on("pointerdown", () => {
+            //console.log(`Clicked Level ${levelNum + 1}`);
+
+            this.scene.start("analyzeScene", {
+                level: levelNum,
+                lives: 5,
+            });
+        });
+
+        this.buttons[levelNum] = button; // Store the button if needed for later reference
+    }
+
+    private handleButtonClick(level: number): void {
+        console.log(`Level ${level} clicked!`);
+        // Display the button value or handle the click as needed
+        // For instance, you could display the value on the screen or perform some action based on the button clicked.
+        /*this.add.text(300, 200, `Button ${buttonValue} was clicked!`, {
+            fontSize: "32px",
+            color: "#FF0000",
+        });
+        */
     }
 }
