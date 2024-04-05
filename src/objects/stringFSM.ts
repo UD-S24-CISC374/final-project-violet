@@ -11,6 +11,10 @@ export class stringFSM {
     private accept: string[]; // accept states of FSM
     private transitions: transition[]; // delta transitions of FSM
 
+    private currentState: string; // will always begin as start
+    private currentString: string; // will always begin as empty
+    private machineAccepts: boolean; // will always begin as false
+
     constructor(
         id: number,
         languageDescription: string,
@@ -20,71 +24,170 @@ export class stringFSM {
         accept: string[],
         transitions: transition[]
     ) {
-        this.idFSM = id;
-        this.languageDescriptionFSM = languageDescription;
-        this.alphabetFSM = alphabet;
-        this.statesFSM = states;
-        this.startFSM = start;
-        this.acceptFSM = accept;
-        this.transitionsFSM = transitions;
+        this.id = id;
+        this.languageDescription = languageDescription;
+        this.alphabet = alphabet;
+        this.states = states;
+        this.start = start;
+        this.accept = accept;
+        this.transitions = transitions;
+
+        this.currentState = this.start;
+        this.currentString = "";
+        this.machineAccepts = false;
     }
 
     // Getter & Setter for id
-    public get idFSM(): number {
+    public getIdFSM(): number {
         return this.id;
     }
-    private set idFSM(value: number) {
-        this.idFSM = value;
+    private setIdFSM(value: number) {
+        this.id = value;
     }
 
     // Getter & Setter for languageDescription
-    public get languageDesctiptionFSM(): string {
+    public getLanguageDescriptionFSM(): string {
         return this.languageDescription;
     }
-    private set languageDescriptionFSM(value: string) {
-        this.languageDescriptionFSM = value;
+    private setLanguageDescriptionFSM(value: string) {
+        this.languageDescription = value;
     }
 
     // Getter & Setter for alphabet
-    public get alphabetFSM(): string[] {
+    public getAlphabetFSM(): string[] {
         return this.alphabet;
     }
-    private set alphabetFSM(value: string[]) {
+    private setAlphabetFSM(value: string[]) {
         this.alphabet = value;
     }
 
     // Getter & Setter for states
-    public get statesFSM(): string[] {
+    public getStatesFSM(): string[] {
         return this.states;
     }
-    private set statesFSM(value: string[]) {
+    private setStatesFSM(value: string[]) {
         this.states = value;
     }
 
     // Getter & Setter for start
-    public get startFSM(): string {
+    public getStartFSM(): string {
         return this.start;
     }
-    private set startFSM(value: string) {
+    private setStartFSM(value: string) {
         this.start = value;
     }
 
     // Getter & Setter for accept
-    public get acceptFSM(): string[] {
+    public getAcceptFSM(): string[] {
         return this.accept;
     }
-    private set acceptFSM(value: string[]) {
+    private setAcceptFSM(value: string[]) {
         this.accept = value;
     }
 
     // Getter & Setter for
-    public get transitionsFSM(): transition[] {
+    public getTransitionsFSM(): transition[] {
         return this.transitions;
     }
-    private set transitionsFSM(value: transition[]) {
+    private setTransitionsFSM(value: transition[]) {
         this.transitions = value;
     }
 
+    public clearCurrentString(): void {
+        this.currentString = "";
+    }
+
+    public resetCurrentState(): void {
+        this.currentState = this.start;
+    }
+
+    public resetMachineAccepts(): void {
+        this.machineAccepts = false;
+    }
+
+    public readInput(input: string): boolean {
+        let readsInput: boolean = false;
+        for (
+            let index = 0;
+            index < this.transitions.length && this.currentState !== "";
+            index++
+        ) {
+            let deltaTransition = this.transitions[index];
+            let state = deltaTransition.getState();
+            if (
+                state === this.currentState &&
+                deltaTransition.checkStateInput(input)
+            ) {
+                readsInput = true;
+                this.currentState = deltaTransition.getStateInput(input);
+                this.currentString += input;
+                break;
+            }
+        }
+        if (!readsInput) {
+            this.currentState === "";
+        }
+        return readsInput;
+    }
+
+    public generateString(): string {
+        this.clearCurrentString();
+        this.resetCurrentState();
+        this.resetMachineAccepts();
+        let count: number = Math.ceil(Math.random() * 10); // length of string
+        for (let index = 0; index < count; index++) {
+            let inputIndex: number = Math.floor(
+                Math.random() * this.alphabet.length
+            );
+            let input = this.alphabet[inputIndex];
+            this.readInput(input);
+        }
+        return this.currentString;
+    }
+
+    public generateStrings(count: number): string[] {
+        let results: string[] = [];
+        count = count < 1 ? 1 : count;
+        for (let index = 0; index < count; index++) {
+            results[index] = this.generateString();
+        }
+        return results;
+    }
+
+    public getMachineAccepts(): boolean {
+        for (let index = 0; index < this.accept.length; index++) {
+            if (this.currentState === this.accept[index]) {
+                this.machineAccepts = true;
+            }
+        }
+        return this.machineAccepts;
+    }
+
+    public checkString(value: string): boolean {
+        this.clearCurrentString();
+        this.resetCurrentState();
+        this.resetMachineAccepts();
+        for (
+            let index = 0;
+            index < value.length && this.currentState !== "";
+            index++
+        ) {
+            let currentInput = value[index];
+            this.readInput(currentInput);
+        }
+        return this.getMachineAccepts();
+    }
+
+    public checkStrings(values: string[]): boolean[] {
+        let acceptingStrings: boolean[] = [];
+        for (let index = 0; index < values.length; index++) {
+            acceptingStrings[index] = this.checkString(values[index]);
+        }
+        return acceptingStrings;
+    }
+}
+
+/*
     public checkString(value: string): boolean {
         let stringAccepts: boolean = true;
         let currentState: string = this.start;
@@ -110,13 +213,14 @@ export class stringFSM {
         }
         return stringAccepts;
     }
+*/
 
-    // Example of a method that performs an action
+/*
+// Example of a method that performs an action
     public doSomething(): void {
         console.log(`Doing something with ${this.id}`);
     }
-}
-
+*/
 /* Example usage in another file
 import { stringFSM } from "../objects/stringFSM";
 

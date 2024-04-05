@@ -16,6 +16,7 @@ export default class menuScene extends Phaser.Scene {
     init() {}
 
     create() {
+        console.log("Menu Scene");
         // Checkerboard background
         this.add.image(640, 360, "checker1");
         // Title text

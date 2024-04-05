@@ -2,7 +2,11 @@ import Phaser from "phaser";
 
 export default class levelScene extends Phaser.Scene {
     private sceneText?: Phaser.GameObjects.Text;
-
+    private buttons: Phaser.GameObjects.Text[] = [];
+    private levelNum: number = 0;
+    private dataToPass = {
+        level: this.levelNum,
+    };
     constructor() {
         super({ key: "levelsScene" });
     }
@@ -14,6 +18,7 @@ export default class levelScene extends Phaser.Scene {
     init() {}
 
     create() {
+        console.log("Levels Scene");
         // Checkerboard background
         this.add.image(640, 360, "checker2");
         // Title text
@@ -33,14 +38,16 @@ export default class levelScene extends Phaser.Scene {
         const startY = 100; // Starting Y position for the first button
         const padding = 40; // Padding between buttons
 
+        let count: number = 0;
         for (let row = 0; row < numRows; row++) {
             for (let col = 0; col < numCols; col++) {
-                let levelNum = row * numCols + col + 1;
-                const buttonLabel = "Level " + levelNum;
+                this.levelNum = row * numCols + col + 1;
+                this.dataToPass.level = this.levelNum;
+                const buttonLabel = "Level " + this.levelNum;
                 const buttonX = startX + col * (buttonWidth + padding);
                 const buttonY = startY + row * (buttonHeight + padding);
-
-                const button = this.add
+                console.log("Level: " + String(this.levelNum));
+                this.buttons[count] = this.add
                     .text(buttonX, buttonY, buttonLabel, {
                         backgroundColor: "#fff",
                         color: "#000",
@@ -48,9 +55,13 @@ export default class levelScene extends Phaser.Scene {
                     })
                     .setPadding(10)
                     .setInteractive();
-                button.on("pointerdown", () =>
-                    this.scene.start("analyzeScene", { buttonLabel })
+                this.buttons[count].on("pointerdown", () =>
+                    this.scene.start("analyzeScene", {
+                        level: 1, //this.levelNum,
+                        lives: 5,
+                    })
                 );
+                count++;
             }
         }
     }
