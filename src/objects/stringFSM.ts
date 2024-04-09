@@ -1,5 +1,3 @@
-// Define the class in a file named ExampleClass.ts
-
 import { transition } from "../objects/transition";
 
 export class stringFSM {
@@ -22,15 +20,16 @@ export class stringFSM {
         states: string[],
         start: string,
         accept: string[],
-        transitions: transition[]
+        transitions: string[][],
+        type: string
     ) {
-        this.id = id;
-        this.languageDescription = languageDescription;
-        this.alphabet = alphabet;
-        this.states = states;
-        this.start = start;
-        this.accept = accept;
-        this.transitions = transitions;
+        this.setIdFSM(id);
+        this.setLanguageDescriptionFSM(languageDescription);
+        this.setAlphabetFSM(alphabet);
+        this.setStatesFSM(states);
+        this.setStartFSM(start);
+        this.setAcceptFSM(accept);
+        this.setTransitionsFSM(transitions, type);
 
         this.currentState = this.start;
         this.currentString = "";
@@ -89,8 +88,26 @@ export class stringFSM {
     public getTransitionsFSM(): transition[] {
         return this.transitions;
     }
-    private setTransitionsFSM(value: transition[]) {
-        this.transitions = value;
+    private setTransitionsFSM(values: string[][], type: string) {
+        let paresedTransitions: transition[] = [];
+        for (let row = 0; row < values.length; row++) {
+            let deltas = new Map();
+            for (let col = 1; col < values[row].length; col += 2) {
+                if (col < values[row].length && col + 1 < values[row].length) {
+                    if (!deltas.has(values[row][col])) {
+                        deltas.set(values[row][col], values[row][col + 1]);
+                    } else if (type === transition.NFA) {
+                        let updateValue: string =
+                            deltas.get(values[row][col]) +
+                            "," +
+                            values[row][col + 1];
+                        deltas.set(values[row][col], updateValue);
+                    }
+                }
+            }
+            paresedTransitions[row] = new transition(values[row][0], deltas);
+        }
+        this.transitions = paresedTransitions;
     }
 
     public clearCurrentString(): void {

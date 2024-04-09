@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { stringFSM } from "../objects/stringFSM";
-import { transition } from "../objects/transition";
+import { levelsFSM } from "../objects/levelsFSM";
 
 export default class analyzeScene extends Phaser.Scene {
     private sceneText?: Phaser.GameObjects.Text;
@@ -12,8 +12,12 @@ export default class analyzeScene extends Phaser.Scene {
     private readonly YELLOW: string = "#FFD700";
     private readonly RED: string = "#f00";
     private runButton: Phaser.GameObjects.Polygon;
+    private runText: Phaser.GameObjects.Text;
     private restartButton: Phaser.GameObjects.Polygon;
+    private restartText: Phaser.GameObjects.Text;
     private stringButtons: Phaser.GameObjects.Text[] = [];
+    private buttonBackgrounds: Phaser.GameObjects.Rectangle[] = [];
+    private madeStrings: string[] = [];
     private toggleButtons: boolean[] = [];
     private acceptButtons: boolean[] = [];
     private machine: stringFSM;
@@ -36,54 +40,96 @@ export default class analyzeScene extends Phaser.Scene {
         console.log("Analyze Scene");
         // Checkerboard background
         this.add.image(640, 360, "checker1");
+        this.add.rectangle(640, 40, 160, 80, 0xffffff);
+
         // Title text
         this.sceneText = this.add
-            .text(640, 32, "Analyze", {
+            .text(640, 40, "Analyze", {
                 fontSize: "32px",
                 color: this.BLACK,
                 align: "center",
             })
             .setOrigin(0.5, 0.5);
-        this.add.text(100, 100, `Level ${String(this.levelNum + 1)}`, {
-            color: this.BLACK,
-            fontSize: "32px",
-        });
+
+        const level = this.add
+            .text(160, 120, `Level ${String(this.levelNum + 1)}`, {
+                color: this.BLACK,
+                fontSize: "32px",
+                backgroundColor: "#fff",
+            })
+            .setOrigin(0.5, 0.5)
+            .setPadding(5);
+        console.log("Level height: " + level.height);
 
         // Create String Buttons
         const numRows: number = 5;
         const numCols: number = 4;
-        const buttonPadding: number = 10;
-        const buttonWidth: number = 160;
-        const buttonHeight: number = 60;
-        const startX: number = 300; // Starting X position for the first button
-        const startY: number = 300; // Starting Y position for the first button
+        const buttonPadding: number = 0;
+        const widthOffset: number = 160;
+        const heightOffset: number = 80;
+        const startX: number = 3 * 80 + 40; // Starting X position for the first button
+        const startY: number = 3 * 80 + 40; // Starting Y position for the first button
         console.log("Level: " + String(this.levelNum + 1));
-        this.machine = this.getLevels()[this.levelNum];
-        this.add.text(100, 140, `${this.machine.getLanguageDescriptionFSM()}`, {
-            color: this.BLACK,
-            fontSize: "30px",
-        });
-        let values: string[] = this.machine.generateStrings(numRows * numCols);
-        console.log(values);
-        this.acceptButtons = this.machine.checkStrings(values);
+        this.machine = levelsFSM.getLevels()[this.levelNum];
+        const language = this.add
+            .text(
+                100,
+                140,
+                `The language of strings: ${this.machine.getLanguageDescriptionFSM()}`,
+                {
+                    color: this.BLACK,
+                    fontSize: "24px",
+                    backgroundColor: "#fff",
+                }
+            )
+            .setOrigin(0.5, 0.5);
+        language.setPosition(100 + language.width / 2, 160);
+        this.add.text(
+            100,
+            180,
+            `Over the alphabet: ${this.machine.getAlphabetFSM()}`,
+            {
+                color: this.BLACK,
+                fontSize: "24px",
+                backgroundColor: "#fff",
+            }
+        );
+        this.madeStrings = this.machine.generateStrings(numRows * numCols);
+        console.log("Values: " + this.madeStrings);
+        this.acceptButtons = this.machine.checkStrings(this.madeStrings);
+        console.log("Accepting Strings: " + this.acceptButtons);
         let count: number = 0;
         for (let row = 0; row < numRows; row++) {
             for (let col = 0; col < numCols; col++) {
                 this.toggleButtons[count] = false;
-                const x = startX + col * (buttonWidth + buttonPadding);
-                const y = startY + row * (buttonHeight + buttonPadding);
+                const x = startX + col * (widthOffset + buttonPadding);
+                const y = startY + row * (heightOffset + buttonPadding);
                 this.stringButtons[count] = this.createToggleButton(
                     x,
                     y,
-                    values[count],
+                    this.madeStrings[count],
                     count
                 );
                 count++;
             }
         }
-        this.createRunButton();
         this.createRestartButton();
+        this.createRunButton();
         this.setButtonEnabled(this.restartButton, false);
+
+        const diamondColor = 0x90ee90; // light green
+        const circleColor = 0x696969; // dark gray
+
+        let crossLength: number = 40;
+        let offset: number = crossLength - 80 / 2;
+        let radius: number = crossLength * 0.65;
+        // Create two diamonds
+        this.createDiamond(960 - offset, 160, diamondColor, crossLength);
+        this.createDiamond(1040 + offset, 160, diamondColor, crossLength);
+
+        // Create two circles, positioned to match diamonds
+        this.createCircle(960 - offset, 160, circleColor, radius);
+        this.createCircle(1040 + offset, 160, circleColor, radius);
     }
 
     public createToggleButton(
@@ -94,12 +140,13 @@ export default class analyzeScene extends Phaser.Scene {
     ): Phaser.GameObjects.Text {
         let button = this.add
             .text(x, y, value, {
-                backgroundColor: this.WHITE,
+                //backgroundColor: this.WHITE,
                 color: this.BLACK,
                 fontSize: "24px",
             }) // Initial text and color black
             .setOrigin(0.5, 0.5)
             .setInteractive({ useHandCursor: true }) // Makes the text clickable and shows a hand cursor on hover
+            .setPadding(10)
             .on("pointerdown", () => {
                 this.toggleButtons[index] = !this.toggleButtons[index];
                 // Correctly toggle the color between black and yellow
@@ -108,6 +155,38 @@ export default class analyzeScene extends Phaser.Scene {
                     color: this.toggleButtons[index] ? this.YELLOW : this.BLACK,
                 });
             });
+
+        let width =
+            button.width < 40
+                ? 40
+                : button.width < 80
+                ? 80
+                : button.width < 120
+                ? 120
+                : 160;
+
+        this.buttonBackgrounds[index] = this.add.rectangle(
+            button.x,
+            button.y,
+            width,
+            button.height,
+            0xffffff
+        );
+
+        button.setDepth(1);
+
+        console.log(
+            value +
+                " xpos: " +
+                button.x +
+                " ypos: " +
+                button.y +
+                " width: " +
+                button.width +
+                " height: " +
+                button.height
+        );
+
         return button;
     }
 
@@ -125,7 +204,13 @@ export default class analyzeScene extends Phaser.Scene {
             this.setButtonEnabled(this.runButton, false);
             this.setButtonEnabled(this.restartButton, true);
             this.setButtonsEnabled(false);
+            console.log("Toggles buttons: ");
+            this.restartButton.setDepth(10);
+            this.restartText.setDepth(10);
+            this.runButton.setDepth(1);
+            this.runText.setDepth(1);
             for (let index = 0; index < this.toggleButtons.length; index++) {
+                console.log(this.toggleButtons[index]);
                 if (
                     (this.toggleButtons[index] && this.acceptButtons[index]) ||
                     (!this.toggleButtons[index] && !this.acceptButtons[index])
@@ -140,14 +225,14 @@ export default class analyzeScene extends Phaser.Scene {
         });
 
         // Add "Run" text on top of the diamond
-        this.add.text(xpos - 15, ypos - 8, "Run", {
+        this.runText = this.add.text(xpos - 15, ypos - 8, "Run", {
             color: "#000",
             fontSize: "16px",
         });
     }
 
     private createRestartButton(): void {
-        let xpos: number = 1100;
+        let xpos: number = 1080;
         let ypos: number = 600;
         this.restartButton = this.add
             .polygon(xpos, ypos, [50, 0, 100, 50, 50, 100, 0, 50], 0xc0c0c0, 1) // Different initial color to indicate disabled state
@@ -156,9 +241,18 @@ export default class analyzeScene extends Phaser.Scene {
                 this.setButtonEnabled(this.restartButton, false);
                 this.setButtonEnabled(this.runButton, true);
                 this.setButtonsEnabled(true);
+                this.resetToggledButtons();
+                this.randomizeButtonLabels();
+                this.resizeBackgrounds();
+                console.log("Values: " + this.madeStrings);
+                console.log("Accepting strings: " + this.acceptButtons);
+                this.runButton.setDepth(10);
+                this.runText.setDepth(10);
+                this.restartButton.setDepth(1);
+                this.restartText.setDepth(1);
             });
 
-        this.add.text(xpos - 32, ypos - 8, "Restart", {
+        this.restartText = this.add.text(xpos - 32, ypos - 8, "Restart", {
             color: "#000",
             fontSize: "16px",
         });
@@ -184,57 +278,58 @@ export default class analyzeScene extends Phaser.Scene {
     private randomizeButtonLabels(): void {
         this.stringButtons.forEach((button, index) => {
             let result: string = this.machine.generateString();
-            this.toggleButtons[index];
+            this.acceptButtons[index] = this.machine.checkString(result);
+            this.madeStrings[index] = result;
             button.setText(result);
         });
     }
 
-    public getLevels(): stringFSM[] {
-        // transitions
-        const lvl1d0 = new transition(
-            "q0",
-            new Map([
-                ["a", "q0"],
-                ["b", "q0"],
-            ])
-        );
-        // finite state machine
-        const lvl1 = new stringFSM(
-            1, // id
-            "The language of all strings over the alphabet {a,b}", // language description
-            ["a", "b"], // alphabet
-            ["q0"], // states
-            "q0", // start state
-            ["q0"], // accepting states
-            [lvl1d0] // delta transitions
-        );
+    private resetToggledButtons(): void {
+        for (let index = 0; index < this.toggleButtons.length; index++) {
+            this.toggleButtons[index] = false;
+        }
+    }
 
-        // transitions
-        const lvl2d0 = new transition(
-            "q0",
-            new Map([
-                ["a", "q1"],
-                ["b", "q0"],
-            ])
-        );
-        const lvl2d1 = new transition(
-            "q1",
-            new Map([
-                ["a", "q0"],
-                ["b", "q1"],
-            ])
-        );
-        // finite state machine
-        const lvl2 = new stringFSM(
-            2, // id
-            "The language of strings with even a's over the alphabet {a,b}", // language description
-            ["a", "b"], // alphabet
-            ["q0", "q1"], // states
-            "q0", // start state
-            ["q0"], // accepting states
-            [lvl2d0, lvl2d1] // delta transitions
-        );
-        let levels: stringFSM[] = [lvl1, lvl2];
-        return levels;
+    private resizeBackgrounds(): void {
+        for (let index = 0; index < this.stringButtons.length; index++) {
+            let button = this.stringButtons[index];
+            let width =
+                button.width < 40
+                    ? 40
+                    : button.width < 80
+                    ? 80
+                    : button.width < 120
+                    ? 120
+                    : 160;
+            let height = 40;
+
+            this.buttonBackgrounds[index].setPosition(button.x, button.y);
+            this.buttonBackgrounds[index].setSize(width, height);
+        }
+    }
+
+    private createDiamond(
+        x: number,
+        y: number,
+        color: number,
+        crossRadius: number
+    ): void {
+        const diamond = this.add.graphics({ fillStyle: { color: color } });
+        const path = new Phaser.Curves.Path(x - crossRadius, y);
+        path.lineTo(x, y - crossRadius);
+        path.lineTo(x + crossRadius, y);
+        path.lineTo(x, y + crossRadius);
+        path.lineTo(x - crossRadius, y);
+        diamond.fillPoints(path.getPoints(), true);
+    }
+
+    private createCircle(
+        x: number,
+        y: number,
+        color: number,
+        radius: number
+    ): void {
+        const circle = this.add.graphics({ fillStyle: { color: color } });
+        circle.fillCircle(x, y, radius); // Adjust the radius as needed
     }
 }

@@ -21,22 +21,26 @@ export default class levelScene extends Phaser.Scene {
         console.log("Levels Scene");
         // Checkerboard background
         this.add.image(640, 360, "checker2");
+
+        this.add.rectangle(640, 40, 160, 80, 0xffffff);
+
         // Title text
         this.sceneText = this.add
-            .text(640, 32, "Levels", {
-                fontSize: "32px",
+            .text(640, 40, "Levels", {
+                fontSize: "40px",
                 color: "#000",
                 align: "center",
             })
+            .setPadding(20)
             .setOrigin(0.5, 0.5);
 
         const numRows = 5;
         const numCols = 2;
-        const buttonWidth = 200;
-        const buttonHeight = 40;
-        const startX = 100; // Starting X position for the first button
-        const startY = 100; // Starting Y position for the first button
-        const padding = 40; // Padding between buttons
+        const buttonWidth = 240;
+        const buttonHeight = 80;
+        const startX = 160; // Starting X position for the first button
+        const startY = 120; // Starting Y position for the first button
+        const padding = 0; //40; // Padding between buttons
 
         let count: number = 0;
         for (let row = 0; row < numRows; row++) {
@@ -57,6 +61,7 @@ export default class levelScene extends Phaser.Scene {
                 color: "#000",
                 fontSize: "20px",
             })
+            .setOrigin(0.5, 0.5)
             .setPadding(10)
             .setInteractive();
 

@@ -19,18 +19,22 @@ export default class menuScene extends Phaser.Scene {
         console.log("Menu Scene");
         // Checkerboard background
         this.add.image(640, 360, "checker1");
+        // First, create a rectangle with the desired dimensions
+        this.add.rectangle(640, 80, 480, 160, 0xffffff);
+
         // Title text
         this.sceneText = this.add
-            .text(640, 32, "Finite Builder", {
-                fontSize: "32px",
+            .text(640, 80, "Finite Builder", {
+                fontSize: "48px",
                 color: "#000",
                 align: "center",
             })
+            .setPadding(20)
             .setOrigin(0.5, 0.5);
         // playButton to levelScene
         this.playButton = this.add
-            .text(640, 360, "Play", {
-                fontSize: "20px",
+            .text(640, 440, "Play", {
+                fontSize: "30px",
                 color: "#0f0",
                 backgroundColor: "#fff",
             })
@@ -68,8 +72,8 @@ export default class menuScene extends Phaser.Scene {
 
         // exitButton to leave game
         this.exitButton = this.add
-            .text(640, 390, "Exit", {
-                fontSize: "20px",
+            .text(640, 520, "Exit", {
+                fontSize: "30px",
                 color: "#000",
                 backgroundColor: "#fff",
             })

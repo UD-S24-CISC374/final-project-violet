@@ -1,8 +1,8 @@
 export class transition {
     private state: string;
     private statesAndInputs: Map<string, string>; // = new Map([]);
-    public readonly DFA: string = "DFA";
-    public readonly NFA: string = "NFA";
+    public static readonly DFA: string = "DFA";
+    public static readonly NFA: string = "NFA";
 
     constructor(state: string, statesAndInputs: Map<string, string>) {
         this.state = state;
@@ -18,11 +18,14 @@ export class transition {
     public setStateInput(input: string, state: string, typeFSM: string): void {
         // add state validator
         if (
-            (typeFSM === this.DFA || typeFSM === this.NFA) &&
+            (typeFSM === transition.DFA || typeFSM === transition.NFA) &&
             !this.statesAndInputs.has(input)
         ) {
             this.statesAndInputs.set(input, state);
-        } else if (typeFSM === this.NFA && this.statesAndInputs.has(input)) {
+        } else if (
+            typeFSM === transition.NFA &&
+            this.statesAndInputs.has(input)
+        ) {
             let updateValue: string =
                 this.statesAndInputs.get(input) + "," + state;
             this.statesAndInputs.set(input, updateValue);
