@@ -10,6 +10,7 @@ export class stateObject {
     private color: number;
     private state: Phaser.GameObjects.Arc;
     private transitions: transitionObject[] = [];
+    private startTransition: transitionObject | undefined;
 
     public static readonly STATE_ANTI_HIT_BOX: number = 80;
     public static readonly TRANSITION_HIT_BOX: number = 40;
@@ -66,6 +67,80 @@ export class stateObject {
             },
             this
         );
+    }
+
+    public getState(): Phaser.GameObjects.Arc {
+        return this.state;
+    }
+
+    public setStartTransition(scene: Phaser.Scene) {
+        let randomDirection: number = Math.floor(Math.random() * 8);
+        let startPosX = this.posX;
+        let startPosY = this.posY;
+        let endPosX = this.posX;
+        let endPosY = this.posY;
+        switch (randomDirection) {
+            case 0: // right
+                startPosX = this.posX + 80;
+                startPosY = this.posY;
+                endPosX = this.posX + 40;
+                endPosY = this.posY;
+                break;
+            case 1: // right down
+                startPosX = this.posX + 80;
+                startPosY = this.posY + 80;
+                endPosX = this.posX + 40;
+                endPosY = this.posY + 40;
+                break;
+            case 2: // down
+                startPosX = this.posX;
+                startPosY = this.posY + 80;
+                endPosX = this.posX;
+                endPosY = this.posY + 40;
+                break;
+            case 3: // left down
+                startPosX = this.posX - 80;
+                startPosY = this.posY + 80;
+                endPosX = this.posX - 40;
+                endPosY = this.posY + 40;
+                break;
+            case 4: // left
+                startPosX = this.posX - 80;
+                startPosY = this.posY;
+                endPosX = this.posX - 40;
+                endPosY = this.posY;
+                break;
+            case 5: // left up
+                startPosX = this.posX - 80;
+                startPosY = this.posY - 80;
+                endPosX = this.posX - 40;
+                endPosY = this.posY - 40;
+                break;
+            case 6: // up
+                startPosX = this.posX;
+                startPosY = this.posY - 80;
+                endPosX = this.posX;
+                endPosY = this.posY - 40;
+                break;
+            case 7: // right up
+                startPosX = this.posX + 80;
+                startPosY = this.posY - 80;
+                endPosX = this.posX + 40;
+                endPosY = this.posY - 40;
+                break;
+            default:
+                break;
+        }
+        this.startTransition = new transitionObject(
+            startPosX,
+            startPosY,
+            endPosX,
+            endPosY,
+            "",
+            scene
+        );
+        this.startTransition.getStart().setInteractive();
+        scene.input.setDraggable(this.startTransition.getStart());
     }
 
     private updatePositions() {

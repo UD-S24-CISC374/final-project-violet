@@ -93,18 +93,45 @@ export default class buildScene extends Phaser.Scene {
             }
         );
 
-        const arrow1 = new transitionObject(440, 440, 600, 440, "a", this);
-        const arrow2 = new transitionObject(440, 440, 600, 440, "b", this);
-        const transitions = [arrow1, arrow2];
-        console.log("transition input: " + arrow1.getInput());
+        // Create a Graphics object
+        const graphics1 = this.add.graphics();
+
+        // Set line style for the border: width and color
+        graphics1.lineStyle(4, color.NUM_GRAY); // White border, 4 pixels thick
+
+        // Set fill style for the circle
+        graphics1.fillStyle(0xff0000, 1); // Red fill
+
+        // Draw a circle with fill and line style
+        // Parameters: x, y, radius
+        graphics1.fillCircle(360, 360, 40);
+        graphics1.strokeCircle(360, 360, 40); // This creates the border
 
         // Create multiple draggable circles
         let startPosX: number = 120;
         let startPosY: number = 600;
         let radius: number = 40;
+        let stateDepth: number = 0;
+        let transitionDepth: number = this.machine.getStartFSM().length;
 
-        this.machine.getStatesFSM().forEach((name, index) => {
-            this.states[index] = new stateObject(
+        this.machine.getStatesFSM().forEach((name, stateIndex) => {
+            const transitions: transitionObject[] = [];
+            this.machine.getAlphabetFSM().forEach((input, transitionIndex) => {
+                transitions[transitionIndex] = new transitionObject(
+                    startPosX,
+                    startPosY,
+                    startPosX,
+                    startPosY,
+                    input,
+                    this
+                );
+                transitions[transitionIndex]
+                    .getStart()
+                    .setDepth(transitionDepth);
+                transitions[transitionIndex].getEnd().setDepth(transitionDepth);
+                transitionDepth++;
+            });
+            this.states[stateIndex] = new stateObject(
                 name,
                 startPosX,
                 startPosY,
@@ -113,6 +140,39 @@ export default class buildScene extends Phaser.Scene {
                 transitions,
                 this
             );
+            this.states[stateIndex].getState().setDepth(stateDepth);
+            stateDepth++;
         });
+        this.states[0].setStartTransition(this);
+
+        const graphics = this.add.graphics({
+            lineStyle: { width: 2, color: 0x000000 },
+        });
+        const centerX = 360;
+        const centerY = 360 - 40 * Math.sqrt(2);
+        const radiusArc = 40;
+        const startAngle = Phaser.Math.DegToRad(135); // Convert degrees to radians
+        const endAngle = Phaser.Math.DegToRad(405);
+
+        // Draw the arc
+        graphics.beginPath();
+        graphics.arc(centerX, centerY, radiusArc, startAngle, endAngle);
+        graphics.strokePath();
+
+        // Calculate the positions for the markers
+        const startX = centerX + radiusArc * Math.cos(startAngle);
+        const startY = centerY + radiusArc * Math.sin(startAngle);
+        const endX = centerX + radiusArc * Math.cos(endAngle);
+        const endY = centerY + radiusArc * Math.sin(endAngle);
+
+        // Draw the plus sign at the start
+        this.add
+            .text(startX, startY, "+", { font: "32px Arial", color: "#000000" })
+            .setOrigin(0.5, 0.5)
+            .setRotation(startAngle);
+        this.add
+            .text(endX, endY, ">", { font: "32px Arial", color: "#000000" })
+            .setOrigin(0.5, 0.5)
+            .setRotation(endAngle + Math.PI / 2);
     }
 }

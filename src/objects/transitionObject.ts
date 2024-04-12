@@ -33,11 +33,11 @@ export class transitionObject {
 
         // Create text on the line
         this.input = scene.add.text(
-            (this.startPosX + this.endPosX) / 2,
-            (this.startPosY + this.endPosY) / 2,
+            this.lerp(this.startPosX, this.endPosX, 0.75),
+            this.lerp(this.startPosY, this.endPosY, 0.75),
             input,
             {
-                fontSize: "20px",
+                fontSize: "32px",
                 color: color.STR_BLACK,
             }
         );
@@ -48,7 +48,7 @@ export class transitionObject {
                 fontSize: "32px",
                 color: color.STR_BLACK,
             })
-            .setInteractive()
+            //.setInteractive()
             .setOrigin(0.5, 0.5)
             .on("pointerup", () => {
                 // Snap circle's position and mark it as not being dragged
@@ -57,7 +57,7 @@ export class transitionObject {
                 this.start.setData("isDragging", false);
                 this.updateLine();
             });
-        scene.input.setDraggable(this.start);
+        //scene.input.setDraggable(this.start);
 
         // Create greater than sign
         this.end = scene.add
@@ -136,6 +136,18 @@ export class transitionObject {
         return this.input.text;
     }
 
+    public getStart(): Phaser.GameObjects.Text {
+        return this.start;
+    }
+
+    public getEnd(): Phaser.GameObjects.Text {
+        return this.end;
+    }
+
+    public lerp(lower: number, higher: number, weight: number): number {
+        return lower + (higher - lower) * weight;
+    }
+
     public updateLine(): void {
         this.line.clear();
         this.line.lineBetween(
@@ -145,8 +157,9 @@ export class transitionObject {
             this.end.y
         );
         // Update line text position to the middle of the line
-        this.input.x = (this.start.x + this.end.x) / 2 - this.input.width / 2;
-        this.input.y = (this.start.y + this.end.y) / 2;
+        this.input.x =
+            this.lerp(this.start.x, this.end.x, 0.75) - this.input.width / 2;
+        this.input.y = this.lerp(this.start.y, this.end.y, 0.75);
 
         let startAngle: number = 0;
         let endAngle: number = 0;
