@@ -1,4 +1,4 @@
-import { transition } from "../objects/transition";
+import { transitionFSM } from "./transitionFSM";
 
 export class stringFSM {
     private id: number; // id of FSM
@@ -7,11 +7,16 @@ export class stringFSM {
     private states: string[]; // states of FSM
     private start: string; // start state of FSM
     private accept: string[]; // accept states of FSM
-    private transitions: transition[]; // delta transitions of FSM
+    private transitions: transitionFSM[]; // delta transitions of FSM
 
     private currentState: string; // will always begin as start
     private currentString: string; // will always begin as empty
     private machineAccepts: boolean; // will always begin as false
+
+    public static readonly DFA = "DFA";
+    public static readonly NFA = "NFA";
+    public static readonly PDA = "PDA";
+    public static readonly TM = "TM";
 
     constructor(
         id: number,
@@ -85,18 +90,18 @@ export class stringFSM {
     }
 
     // Getter & Setter for
-    public getTransitionsFSM(): transition[] {
+    public getTransitionsFSM(): transitionFSM[] {
         return this.transitions;
     }
     private setTransitionsFSM(values: string[][], type: string) {
-        let paresedTransitions: transition[] = [];
+        let paresedTransitions: transitionFSM[] = [];
         for (let row = 0; row < values.length; row++) {
             let deltas = new Map();
             for (let col = 1; col < values[row].length; col += 2) {
                 if (col < values[row].length && col + 1 < values[row].length) {
                     if (!deltas.has(values[row][col])) {
                         deltas.set(values[row][col], values[row][col + 1]);
-                    } else if (type === transition.NFA) {
+                    } else if (type === stringFSM.NFA) {
                         let updateValue: string =
                             deltas.get(values[row][col]) +
                             "," +
@@ -105,7 +110,7 @@ export class stringFSM {
                     }
                 }
             }
-            paresedTransitions[row] = new transition(values[row][0], deltas);
+            paresedTransitions[row] = new transitionFSM(values[row][0], deltas);
         }
         this.transitions = paresedTransitions;
     }

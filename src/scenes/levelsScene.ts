@@ -1,12 +1,12 @@
 import Phaser from "phaser";
+import { color } from "../objects/color";
 
 export default class levelScene extends Phaser.Scene {
-    private sceneText?: Phaser.GameObjects.Text;
+    private sceneTitle: Phaser.GameObjects.Text;
     private buttons: Phaser.GameObjects.Text[] = [];
     private levelNum: number = 0;
-    private dataToPass = {
-        level: this.levelNum,
-    };
+    private livesCount: number = 5;
+    private levelsPassed: boolean[] = [];
     constructor() {
         super({ key: "levelsScene" });
     }
@@ -22,18 +22,17 @@ export default class levelScene extends Phaser.Scene {
         // Checkerboard background
         this.add.image(640, 360, "checker2");
 
-        this.add.rectangle(640, 40, 160, 80, 0xffffff);
+        this.add.rectangle(640, 40, 160, 80, color.NUM_WHITE);
 
         // Title text
-        this.sceneText = this.add
-            .text(640, 40, "Levels", {
-                fontSize: "40px",
-                color: "#000",
-                align: "center",
-            })
-            .setPadding(20)
-            .setOrigin(0.5, 0.5);
+        this.sceneTitle = this.add.text(640, 40, "Levels", {
+            fontSize: "40px",
+            color: color.STR_BLACK,
+            align: "center",
+        });
+        this.sceneTitle.setPadding(20).setOrigin(0.5, 0.5);
 
+        // Level Button Variables
         const numRows = 5;
         const numCols = 2;
         const buttonWidth = 240;
@@ -42,49 +41,54 @@ export default class levelScene extends Phaser.Scene {
         const startY = 120; // Starting Y position for the first button
         const padding = 0; //40; // Padding between buttons
 
+        // Create Level Buttons
         let count: number = 0;
+        let lives: number = 5;
         for (let row = 0; row < numRows; row++) {
             for (let col = 0; col < numCols; col++) {
                 const buttonX = startX + col * (buttonWidth + padding);
                 const buttonY = startY + row * (buttonHeight + padding);
-                this.createButton(buttonX, buttonY, count);
+                this.createButton(buttonX, buttonY, count, lives);
+                this.levelsPassed[count] = false;
                 count++;
             }
         }
+        this.levelNum = 0;
     }
 
-    private createButton(x: number, y: number, levelNum: number): void {
+    private createButton(
+        xpos: number,
+        ypos: number,
+        levelNum: number,
+        livesCount: number
+    ): void {
         const buttonLabel = `Level ${levelNum + 1}`; // Adjusted for human-readable level numbering
         const button = this.add
-            .text(x, y, buttonLabel, {
-                backgroundColor: "#fff",
-                color: "#000",
+            .text(xpos, ypos, buttonLabel, {
+                backgroundColor: color.STR_WHITE,
+                color: color.STR_BLACK,
                 fontSize: "20px",
             })
             .setOrigin(0.5, 0.5)
             .setPadding(10)
-            .setInteractive();
+            .setInteractive()
+            .setSize(100, 40);
+
+        console.log(
+            `Level ${levelNum} Button - width: ` +
+                button.width +
+                " height: " +
+                button.height
+        );
 
         button.on("pointerdown", () => {
             //console.log(`Clicked Level ${levelNum + 1}`);
-
             this.scene.start("analyzeScene", {
-                level: levelNum,
-                lives: 5,
+                levelNum: levelNum,
+                livesCount: livesCount,
             });
         });
 
         this.buttons[levelNum] = button; // Store the button if needed for later reference
-    }
-
-    private handleButtonClick(level: number): void {
-        console.log(`Level ${level} clicked!`);
-        // Display the button value or handle the click as needed
-        // For instance, you could display the value on the screen or perform some action based on the button clicked.
-        /*this.add.text(300, 200, `Button ${buttonValue} was clicked!`, {
-            fontSize: "32px",
-            color: "#FF0000",
-        });
-        */
     }
 }

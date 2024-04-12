@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { color } from "../objects/color";
 
 export default class menuScene extends Phaser.Scene {
     private sceneText: Phaser.GameObjects.Text;
@@ -19,24 +20,24 @@ export default class menuScene extends Phaser.Scene {
         console.log("Menu Scene");
         // Checkerboard background
         this.add.image(640, 360, "checker1");
-        // First, create a rectangle with the desired dimensions
-        this.add.rectangle(640, 80, 480, 160, 0xffffff);
 
         // Title text
+        this.add.rectangle(640, 80, 480, 160, color.NUM_WHITE);
         this.sceneText = this.add
             .text(640, 80, "Finite Builder", {
                 fontSize: "48px",
-                color: "#000",
+                color: color.STR_BLACK,
                 align: "center",
             })
             .setPadding(20)
             .setOrigin(0.5, 0.5);
+
         // playButton to levelScene
         this.playButton = this.add
             .text(640, 440, "Play", {
                 fontSize: "30px",
-                color: "#0f0",
-                backgroundColor: "#fff",
+                color: color.STR_GREEN,
+                backgroundColor: color.STR_WHITE,
             })
             .setOrigin(0.5, 0.5)
             .setPadding(10)
@@ -54,28 +55,28 @@ export default class menuScene extends Phaser.Scene {
 
         // playButton styling
         this.playButton.on("pointerover", () =>
-            this.playButton.setStyle({ fill: "#ff0" })
+            this.playButton.setStyle({ fill: color.STR_YELLOW })
         );
         this.playButton.on("pointerout", () =>
-            this.playButton.setStyle({ fill: "#0f0" })
+            this.playButton.setStyle({ fill: color.STR_GREEN })
         );
         this.playButton.on("pointerdown", () =>
             this.playButton
-                .setStyle({ fill: "#f00" })
+                .setStyle({ fill: color.STR_RED })
                 .on("pointerout", () =>
-                    this.playButton.setStyle({ fill: "#f00" })
+                    this.playButton.setStyle({ fill: color.STR_RED })
                 )
         );
         this.playButton.on("pointerup", () =>
-            this.playButton.setStyle({ fill: "#f00" })
+            this.playButton.setStyle({ fill: color.STR_RED })
         );
 
         // exitButton to leave game
         this.exitButton = this.add
             .text(640, 520, "Exit", {
                 fontSize: "30px",
-                color: "#000",
-                backgroundColor: "#fff",
+                color: color.STR_BLACK,
+                backgroundColor: color.STR_WHITE,
             })
             .setOrigin(0.5, 0.5)
             .setPadding(10)
@@ -91,22 +92,22 @@ export default class menuScene extends Phaser.Scene {
                 )
             );
 
-        // playButton styling
+        // exitButton styling
         this.exitButton.on("pointerover", () =>
-            this.exitButton.setStyle({ fill: "#ff0" })
+            this.exitButton.setStyle({ fill: color.STR_YELLOW })
         );
         this.exitButton.on("pointerout", () =>
-            this.exitButton.setStyle({ fill: "#000" })
+            this.exitButton.setStyle({ fill: color.STR_BLACK })
         );
         this.exitButton.on("pointerdown", () =>
             this.exitButton
-                .setStyle({ fill: "#f00" })
+                .setStyle({ fill: color.STR_RED })
                 .on("pointerout", () =>
-                    this.exitButton.setStyle({ fill: "#f00" })
+                    this.exitButton.setStyle({ fill: color.STR_RED })
                 )
         );
         this.exitButton.on("pointerup", () =>
-            this.exitButton.setStyle({ fill: "#f00" })
+            this.exitButton.setStyle({ fill: color.STR_RED })
         );
     }
 }
