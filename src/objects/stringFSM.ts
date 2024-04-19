@@ -207,6 +207,26 @@ export class stringFSM {
         }
         return acceptingStrings;
     }
+
+    public stateIsAccepting(name: string): boolean {
+        let isAccepting: boolean = false;
+        for (let stateInd = 0; stateInd < this.states.length; stateInd++) {
+            for (
+                let acceptInd = 0;
+                acceptInd < this.accept.length && !isAccepting;
+                acceptInd++
+            ) {
+                if (
+                    name === this.states[stateInd] &&
+                    name == this.accept[acceptInd]
+                ) {
+                    isAccepting = true;
+                    break;
+                }
+            }
+        }
+        return isAccepting;
+    }
 }
 
 /*

@@ -6,6 +6,7 @@ export abstract class color {
     public static readonly STR_YELLOW: string = "#ffd700";
     public static readonly STR_RED: string = "#f00";
     public static readonly NUM_WHITE: number = 0xffffff;
+    public static readonly NUM_BLACK: number = 0x000000;
     public static readonly NUM_YELLOW: number = 0xffd700; // RUN & RESTART BUTTON ENABLED FILL
     public static readonly NUM_GRAY: number = 0xc0c0c0; // RUN & RESTART BUTTON DISABLED FILL
     public static readonly NUM_LIGHT_GREEN: number = 0x90ee90; // AGAPE HAPPY MOOD COLOR

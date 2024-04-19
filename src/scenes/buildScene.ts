@@ -16,6 +16,9 @@ export default class buildScene extends Phaser.Scene {
     private lineText: Phaser.GameObjects.Text;
     private lineGraphics: Phaser.GameObjects.Graphics;
 
+    private hitBoxButton: Phaser.GameObjects.Polygon;
+    private toggleHitBoxes: boolean = false;
+
     private states: stateObject[] = [];
     private stateDepths: number[] = [];
 
@@ -93,20 +96,6 @@ export default class buildScene extends Phaser.Scene {
             }
         );
 
-        // Create a Graphics object
-        const graphics1 = this.add.graphics();
-
-        // Set line style for the border: width and color
-        graphics1.lineStyle(4, color.NUM_GRAY); // White border, 4 pixels thick
-
-        // Set fill style for the circle
-        graphics1.fillStyle(0xff0000, 1); // Red fill
-
-        // Draw a circle with fill and line style
-        // Parameters: x, y, radius
-        graphics1.fillCircle(360, 360, 40);
-        graphics1.strokeCircle(360, 360, 40); // This creates the border
-
         // Create multiple draggable circles
         let startPosX: number = 120;
         let startPosY: number = 600;
@@ -123,6 +112,7 @@ export default class buildScene extends Phaser.Scene {
                     startPosX,
                     startPosY,
                     input,
+                    radius,
                     this
                 );
                 transitions[transitionIndex]
@@ -138,6 +128,7 @@ export default class buildScene extends Phaser.Scene {
                 radius,
                 color.NUM_YELLOW,
                 transitions,
+                this.machine.stateIsAccepting(name),
                 this
             );
             this.states[stateIndex].getState().setDepth(stateDepth);
@@ -145,34 +136,28 @@ export default class buildScene extends Phaser.Scene {
         });
         this.states[0].setStartTransition(this);
 
-        const graphics = this.add.graphics({
-            lineStyle: { width: 2, color: 0x000000 },
+        // Button to show/hide state hit box
+        this.hitBoxButton = this.add
+            .polygon(
+                1040,
+                400,
+                [50, 0, 100, 50, 50, 100, 0, 50],
+                color.NUM_YELLOW,
+                1
+            )
+            .setInteractive({ handcursor: true });
+        this.hitBoxButton.on("pointerdown", () => {
+            if (this.toggleHitBoxes) {
+                this.states.forEach((state) => {
+                    state.hideStateHitBox();
+                });
+                this.toggleHitBoxes = false;
+            } else {
+                this.states.forEach((state) => {
+                    state.showStateHitBox();
+                });
+                this.toggleHitBoxes = true;
+            }
         });
-        const centerX = 360;
-        const centerY = 360 - 40 * Math.sqrt(2);
-        const radiusArc = 40;
-        const startAngle = Phaser.Math.DegToRad(135); // Convert degrees to radians
-        const endAngle = Phaser.Math.DegToRad(405);
-
-        // Draw the arc
-        graphics.beginPath();
-        graphics.arc(centerX, centerY, radiusArc, startAngle, endAngle);
-        graphics.strokePath();
-
-        // Calculate the positions for the markers
-        const startX = centerX + radiusArc * Math.cos(startAngle);
-        const startY = centerY + radiusArc * Math.sin(startAngle);
-        const endX = centerX + radiusArc * Math.cos(endAngle);
-        const endY = centerY + radiusArc * Math.sin(endAngle);
-
-        // Draw the plus sign at the start
-        this.add
-            .text(startX, startY, "+", { font: "32px Arial", color: "#000000" })
-            .setOrigin(0.5, 0.5)
-            .setRotation(startAngle);
-        this.add
-            .text(endX, endY, ">", { font: "32px Arial", color: "#000000" })
-            .setOrigin(0.5, 0.5)
-            .setRotation(endAngle + Math.PI / 2);
     }
 }

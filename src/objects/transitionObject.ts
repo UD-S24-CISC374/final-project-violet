@@ -13,22 +13,32 @@ export class transitionObject {
     private line: Phaser.GameObjects.Graphics;
     private input: Phaser.GameObjects.Text;
 
+    private startTransition: boolean;
+    private isDragging: boolean;
+    private loop: boolean;
+    private loopCondLen: number;
+
     constructor(
         startPosX: number,
         startPosY: number,
         endPosX: number,
         endPosY: number,
         input: string,
+        loopCondLen: number,
         scene: Phaser.Scene
     ) {
         this.startPosX = startPosX;
         this.startPosY = startPosY;
         this.endPosX = endPosX;
         this.endPosY = endPosY;
+        this.startTransition = false;
+        this.isDragging = false;
+        this.loopCondLen = loopCondLen;
+        this.loop = false;
 
         // Create line graphics
         this.line = scene.add.graphics({
-            lineStyle: { width: 2, color: color.NUM_DARK_GRAY },
+            lineStyle: { width: 4, color: color.NUM_BLACK },
         });
 
         // Create text on the line
@@ -38,6 +48,7 @@ export class transitionObject {
             input,
             {
                 fontSize: "32px",
+                fontStyle: "bold",
                 color: color.STR_BLACK,
             }
         );
@@ -46,33 +57,44 @@ export class transitionObject {
         this.start = scene.add
             .text(this.startPosX, this.startPosY, "+", {
                 fontSize: "32px",
-                color: color.STR_BLACK,
-            })
-            //.setInteractive()
-            .setOrigin(0.5, 0.5)
-            .on("pointerup", () => {
-                // Snap circle's position and mark it as not being dragged
-                this.start.x = Math.round(this.start.x / 40) * 40;
-                this.start.y = Math.round(this.start.y / 40) * 40;
-                this.start.setData("isDragging", false);
-                this.updateLine();
-            });
-        //scene.input.setDraggable(this.start);
-
-        // Create greater than sign
-        this.end = scene.add
-            .text(this.endPosX, this.endPosY, "<", {
-                fontSize: "32px",
+                fontStyle: "bold",
                 color: color.STR_BLACK,
             })
             .setInteractive()
             .setOrigin(0.5, 0.5)
             .on("pointerup", () => {
-                // Snap circle's position and mark it as not being dragged
-                this.end.x = Math.round(this.end.x / 40) * 40;
-                this.end.y = Math.round(this.end.y / 40) * 40;
-                this.end.setData("isDragging", false);
+                // Snap start position and mark it as not being dragged
+                if (!this.loop) {
+                    this.start.x = Math.round(this.start.x / 40) * 40;
+                    this.start.y = Math.round(this.start.y / 40) * 40;
+                }
+                this.startPosX = this.start.x;
+                this.startPosY = this.start.y;
+                this.isDragging = false;
                 this.updateLine();
+                this.start.setData("isDragging", false);
+            });
+        scene.input.setDraggable(this.start);
+
+        // Create greater than sign
+        this.end = scene.add
+            .text(this.endPosX, this.endPosY, "<", {
+                fontSize: "32px",
+                fontStyle: "bold",
+                color: color.STR_BLACK,
+            })
+            .setInteractive()
+            .setOrigin(0.5, 0.5)
+            .on("pointerup", () => {
+                // Snap end position and mark it as not being dragged
+                if (!this.loop) {
+                    this.end.x = Math.round(this.end.x / 40) * 40;
+                    this.end.y = Math.round(this.end.y / 40) * 40;
+                }
+                this.endPosX = this.end.x;
+                this.endPosY = this.end.y;
+                this.updateLine();
+                this.end.setData("isDragging", false);
             });
         scene.input.setDraggable(this.end);
 
@@ -90,10 +112,16 @@ export class transitionObject {
                 // Since gameObject is of type GameObject, we need to assert the specific type
                 // if we know it's going to be a Text object or another specific type
                 // to access properties like x and y safely.
-                if (gameObject instanceof Phaser.GameObjects.Text) {
+                if (
+                    gameObject instanceof Phaser.GameObjects.Text &&
+                    (this.start === gameObject || this.end === gameObject)
+                ) {
                     gameObject.x = dragX;
                     gameObject.y = dragY;
+                    this.loop = false;
+                    this.isDragging = true;
                 }
+
                 this.updateLine();
             }
         );
@@ -128,6 +156,10 @@ export class transitionObject {
         return this.endPosY;
     }
 
+    public setText(text: Phaser.GameObjects.Text) {
+        this.input = text;
+    }
+
     public setInput(input: string) {
         this.input.setText(input);
     }
@@ -136,12 +168,45 @@ export class transitionObject {
         return this.input.text;
     }
 
+    public setLine(line: Phaser.GameObjects.Graphics) {
+        this.line = line;
+    }
+
+    public getLine(): Phaser.GameObjects.Graphics {
+        return this.line;
+    }
+
+    public setStart(start: Phaser.GameObjects.Text): void {
+        this.start = start;
+    }
+
     public getStart(): Phaser.GameObjects.Text {
         return this.start;
     }
 
+    public setEnd(end: Phaser.GameObjects.Text): void {
+        this.end = end;
+    }
+
     public getEnd(): Phaser.GameObjects.Text {
         return this.end;
+    }
+
+    public setLoop(loop: boolean): void {
+        this.loop = loop;
+    }
+
+    public getLoop(): boolean {
+        return this.loop;
+    }
+
+    public setStartTransition(startTransition: boolean): void {
+        this.startTransition = startTransition;
+        console.log("transition made start: " + this.startTransition);
+    }
+
+    public getStartTranstition(): boolean {
+        return this.startTransition;
     }
 
     public lerp(lower: number, higher: number, weight: number): number {
@@ -149,40 +214,133 @@ export class transitionObject {
     }
 
     public updateLine(): void {
-        this.line.clear();
-        this.line.lineBetween(
-            this.start.x,
-            this.start.y,
-            this.end.x,
-            this.end.y
+        console.log("-Updating Line!");
+        console.log("Is start transition: " + this.startTransition);
+        let distance: number = Math.sqrt(
+            Math.pow(this.end.x - this.start.x, 2) +
+                Math.pow(this.end.y - this.start.y, 2)
         );
-        // Update line text position to the middle of the line
-        this.input.x =
-            this.lerp(this.start.x, this.end.x, 0.75) - this.input.width / 2;
-        this.input.y = this.lerp(this.start.y, this.end.y, 0.75);
+        console.log("Line Distance: " + distance);
+        console.log("Loop Condition Length: " + this.loopCondLen);
+        if (distance === this.loopCondLen && !this.startTransition) {
+            console.log("Transiton: Self Loop");
+            this.loop = true;
+            let radiusArc = this.loopCondLen; //40;
+            let centerX = this.start.x;
+            let centerY = this.start.y;
+            let startAngle = 0;
+            let endAngle = 0;
+            let onCardinal = false;
 
-        let startAngle: number = 0;
-        let endAngle: number = 0;
+            if (
+                this.end.x == this.start.x + this.loopCondLen &&
+                this.end.y == this.start.y
+            ) {
+                console.log("Self Loop Direction: Right");
+                centerX += radiusArc * Math.sqrt(2);
+                startAngle = Phaser.Math.DegToRad(225);
+                endAngle = Phaser.Math.DegToRad(135);
+                onCardinal = true;
+            } else if (
+                this.end.x == this.start.x - this.loopCondLen &&
+                this.end.y == this.start.y
+            ) {
+                console.log("Self Loop Direction: Left");
+                centerX -= radiusArc * Math.sqrt(2);
+                startAngle = Phaser.Math.DegToRad(45);
+                endAngle = Phaser.Math.DegToRad(315);
+                onCardinal = true;
+            } else if (
+                this.end.x == this.start.x &&
+                this.end.y == this.start.y - this.loopCondLen
+            ) {
+                console.log("Self Loop Direction: Up");
+                centerY -= radiusArc * Math.sqrt(2);
+                startAngle = Phaser.Math.DegToRad(135);
+                endAngle = Phaser.Math.DegToRad(45);
+                onCardinal = true;
+            } else if (
+                this.end.x == this.start.x &&
+                this.end.y == this.start.y + this.loopCondLen
+            ) {
+                console.log("Self Loop Direction: Down");
+                centerY += radiusArc * Math.sqrt(2);
+                startAngle = Phaser.Math.DegToRad(315);
+                endAngle = Phaser.Math.DegToRad(225);
+                onCardinal = true;
+            }
 
-        let deltaStartX: number = this.end.x - this.start.x;
-        let deltaStartY: number = this.end.y - this.start.y;
-        let deltaEndX: number = this.start.x - this.end.x;
-        let deltaEndY: number = this.start.y - this.end.y;
+            if (onCardinal) {
+                this.line.clear();
+                this.line.beginPath();
+                this.line.arc(
+                    centerX,
+                    centerY,
+                    radiusArc,
+                    startAngle,
+                    endAngle
+                );
+                this.line.strokePath();
+                // Calculate the positions for the markers
+                let startX = centerX + radiusArc * Math.cos(startAngle);
+                let startY = centerY + radiusArc * Math.sin(startAngle);
+                let endX = centerX + radiusArc * Math.cos(endAngle);
+                let endY = centerY + radiusArc * Math.sin(endAngle);
 
-        startAngle = Math.atan(deltaStartY / deltaStartX);
-        endAngle = Math.atan(deltaEndY / deltaEndX);
+                this.input.setPosition(centerX, centerY).setOrigin(0.5, 0.5);
 
-        if (this.start.x < this.end.x) {
-            endAngle += Math.PI;
+                this.start.setPosition(startX, startY);
+                this.start.setRotation(startAngle);
+                this.end.setPosition(endX, endY);
+                this.end.setRotation(endAngle - Math.PI / 2);
+            }
+        } else {
+            console.log("Transition: Line");
+            if (!this.loop) {
+                if (this.isDragging && !this.startTransition) {
+                    this.start.setPosition(this.startPosX, this.startPosY);
+                } else {
+                    this.start.setPosition(this.start.x, this.start.y);
+                }
+                this.end.setPosition(this.end.x, this.end.y);
+                this.line.clear();
+                this.line.lineBetween(
+                    this.start.x,
+                    this.start.y,
+                    this.end.x,
+                    this.end.y
+                );
+            }
         }
 
-        console.log(
-            "Plus Sign Angle: " + Math.round(startAngle * (180 / Math.PI))
-        );
-        console.log(
-            "Greater Than Angle: " + Math.round(endAngle * (180 / Math.PI))
-        );
-        this.start.setRotation(startAngle);
-        this.end.setRotation(endAngle);
+        if (!this.loop) {
+            // Update line text position to the middle of the line
+            this.input.x = this.lerp(this.start.x, this.end.x, 0.75); //- this.input.width / 2;
+            this.input.y = this.lerp(this.start.y, this.end.y, 0.75);
+            this.input.setOrigin(0, 0);
+
+            let startAngle: number = 0;
+            let endAngle: number = 0;
+
+            let deltaStartX: number = this.end.x - this.start.x;
+            let deltaStartY: number = this.end.y - this.start.y;
+            let deltaEndX: number = this.start.x - this.end.x;
+            let deltaEndY: number = this.start.y - this.end.y;
+
+            startAngle = Math.atan(deltaStartY / deltaStartX);
+            endAngle = Math.atan(deltaEndY / deltaEndX);
+            if (this.start.x < this.end.x) {
+                endAngle += Math.PI;
+            }
+
+            console.log(
+                "Plus Sign Angle: " + Math.round(startAngle * (180 / Math.PI))
+            );
+            console.log(
+                "Greater Than Angle: " + Math.round(endAngle * (180 / Math.PI))
+            );
+            this.start.setRotation(startAngle);
+            this.end.setRotation(endAngle);
+        }
     }
 }
