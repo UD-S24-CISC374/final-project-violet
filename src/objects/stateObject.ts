@@ -39,7 +39,7 @@ export class stateObject {
         this.transitions = transitions;
         this.direction = Math.floor(Math.random() * 4);
 
-        console.log(this.name + " maybe accepts");
+        //console.log(this.name + " maybe accepts");
         if (accept) {
             this.acceptState = scene.add.circle(
                 this.posX,
@@ -47,7 +47,7 @@ export class stateObject {
                 radius + 5,
                 color.NUM_DARK_GRAY
             );
-            console.log(this.name + " is accepting");
+            //console.log(this.name + " is accepting");
         }
         this.state = scene.add
             .circle(this.posX, this.posY, this.radius, this.stateColor)
@@ -95,6 +95,22 @@ export class stateObject {
                     this.updateCardinalDots();
                     this.updateStateHitBox();
                     this.updateTransitions();
+
+                    this.transitions.forEach((transition) => {
+                        let start = transition.getStart();
+                        let end = transition.getEnd();
+                        let startDist = Math.sqrt(
+                            Math.pow(start.x - this.state.x, 2) +
+                                Math.pow(start.y - this.state.y, 2)
+                        );
+                        let endDist = Math.sqrt(
+                            Math.pow(end.x - this.state.x, 2) +
+                                Math.pow(end.y - this.state.y, 2)
+                        );
+                        console.log("start distance: " + startDist);
+                        console.log("end distance: " + endDist);
+                        console.log("state radius: " + this.state.radius);
+                    });
                 }
             },
             this
@@ -125,8 +141,8 @@ export class stateObject {
             let posY = this.state.y + (this.radius + 2) * Math.sin(angle);
             dot.fillStyle(color.NUM_DARK_GRAY);
             dot.fillCircle(posX, posY, 10);
-            console.log("cardinal dot index: " + index);
-            console.log("posX: " + posX + " posY: " + posY);
+            //console.log("cardinal dot index: " + index);
+            //console.log("posX: " + posX + " posY: " + posY);
         });
     }
 
@@ -158,7 +174,7 @@ export class stateObject {
         let endPosX = this.posX;
         let endPosY = this.posY;
         if (this.startTransition === undefined) {
-            console.log("--Creating start transition!");
+            //console.log("--Creating start transition!");
             this.startTransition = new transitionObject(
                 startPosX,
                 startPosY,
@@ -206,12 +222,12 @@ export class stateObject {
                             2
                         )
                 );
-
+                /*
                 console.log("distLeft: " + distLeft);
                 console.log("distRight: " + distRight);
                 console.log("distUp: " + distUp);
                 console.log("distDown: " + distDown);
-
+                */
                 if (
                     Math.min(distLeft, distRight, distUp, distDown) == distLeft
                 ) {
@@ -275,7 +291,7 @@ export class stateObject {
                     this.direction = -1;
                     break;
             }
-            console.log("--Start transition exists! Updating..");
+            //console.log("--Start transition exists! Updating..");
             this.startTransition.setStartPosX(startPosX);
             this.startTransition.setStartPosY(startPosY);
             this.startTransition.setEndPosX(endPosX);

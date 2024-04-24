@@ -11,16 +11,23 @@ export default class buildScene extends Phaser.Scene {
     private livesCount: number = 5;
     private machine: stringFSM;
 
-    private plusSign: Phaser.GameObjects.Text;
-    private lessThanSign: Phaser.GameObjects.Text;
-    private lineText: Phaser.GameObjects.Text;
-    private lineGraphics: Phaser.GameObjects.Graphics;
-
     private hitBoxButton: Phaser.GameObjects.Polygon;
+    private hitBoxText: Phaser.GameObjects.Text;
     private toggleHitBoxes: boolean = false;
 
+    private runButton: Phaser.GameObjects.Polygon;
+    private runText: Phaser.GameObjects.Text;
+
     private states: stateObject[] = [];
-    private stateDepths: number[] = [];
+    //private stateDepths: number[] = [];
+    private statesOutOfHitBoxes: number[] = [];
+    private statesPlaced: boolean[] = [];
+
+    private transitions: transitionObject[] = [];
+    private transitionInState: boolean[] = [];
+    private transitionToState: number[] = [];
+
+    private builtMachine: stringFSM;
 
     constructor() {
         super({ key: "buildScene" });
@@ -102,11 +109,12 @@ export default class buildScene extends Phaser.Scene {
         let radius: number = 40;
         let stateDepth: number = 0;
         let transitionDepth: number = this.machine.getStartFSM().length;
+        let totalTransitionIndex: number = 0;
 
         this.machine.getStatesFSM().forEach((name, stateIndex) => {
-            const transitions: transitionObject[] = [];
+            const theseTransitions: transitionObject[] = [];
             this.machine.getAlphabetFSM().forEach((input, transitionIndex) => {
-                transitions[transitionIndex] = new transitionObject(
+                theseTransitions[transitionIndex] = new transitionObject(
                     startPosX,
                     startPosY,
                     startPosX,
@@ -115,26 +123,136 @@ export default class buildScene extends Phaser.Scene {
                     radius,
                     this
                 );
-                transitions[transitionIndex]
+                theseTransitions[transitionIndex]
                     .getStart()
                     .setDepth(transitionDepth);
-                transitions[transitionIndex].getEnd().setDepth(transitionDepth);
+                theseTransitions[transitionIndex]
+                    .getEnd()
+                    .setDepth(transitionDepth);
                 transitionDepth++;
+
+                console.log("CREATING TRANSITION - state index: " + stateIndex);
+                theseTransitions[transitionIndex].setStartIndex(stateIndex);
+                theseTransitions[transitionIndex].setEndIndex(-1);
+
+                this.transitions[totalTransitionIndex] =
+                    theseTransitions[transitionIndex];
+
+                this.transitionInState[totalTransitionIndex] = false;
+                this.transitionToState[totalTransitionIndex] = -1;
+                console.log("transition index: " + totalTransitionIndex);
+                // arrow.on("pointerup",()=>{})
+                totalTransitionIndex++;
             });
+
             this.states[stateIndex] = new stateObject(
                 name,
                 startPosX,
                 startPosY,
                 radius,
                 color.NUM_YELLOW,
-                transitions,
+                theseTransitions,
                 this.machine.stateIsAccepting(name),
                 this
             );
-            this.states[stateIndex].getState().setDepth(stateDepth);
+            this.statesOutOfHitBoxes[stateIndex] = 0;
+            this.statesPlaced[stateIndex] = false;
+            let circle = this.states[stateIndex].getState();
+            circle.setDepth(stateDepth);
+
+            circle.on("pointerup", () => {
+                this.statesPlaced[stateIndex] = true;
+                this.clearStateHitBoxAudit();
+                circle.x = Math.round(circle.x / 40) * 40;
+                circle.y = Math.round(circle.y / 40) * 40;
+                for (let index1 = 0; index1 < this.states.length; index1++) {
+                    for (
+                        let index2 = index1;
+                        index2 < this.states.length;
+                        index2++
+                    ) {
+                        console.log(index1 + " " + index2);
+                        let circle = this.states[index1].getState();
+                        let otherCircle = this.states[index2].getState();
+                        if (circle !== otherCircle) {
+                            let isMinimumDist = this.checkMinimumDistance(
+                                circle,
+                                otherCircle
+                            );
+                            console.log("state 1: " + index1);
+                            console.log("state 2: " + index2);
+                            if (isMinimumDist) {
+                                console.log("outside of hit box");
+                                this.statesOutOfHitBoxes[index1]++;
+                                this.statesOutOfHitBoxes[index2]++;
+                                console.log("MIN: " + index1 + " " + index2);
+                            } else {
+                                console.log("inside of hit box");
+                                this.statesOutOfHitBoxes[index1]--;
+                                this.statesOutOfHitBoxes[index2]--;
+                                console.log(
+                                    "NOT MIN: " + index1 + " " + index2
+                                );
+                            }
+                        } else if (this.states.length == 1) {
+                            console.log("only 1 state");
+                            this.statesOutOfHitBoxes[index1] = 1;
+                        }
+                    }
+                }
+                console.log(this.statesOutOfHitBoxes);
+                console.log(this.statesPlaced);
+            });
+
             stateDepth++;
         });
+
         this.states[0].setStartTransition(this);
+
+        this.transitions.forEach((transition, transitionIndex) => {
+            let arrow = transition.getEnd();
+            arrow.on("pointerup", () => {
+                console.log("arrow index: " + transitionIndex);
+                let skip: boolean = false;
+                this.states.forEach((state, stateIndex) => {
+                    let circle = state.getState();
+                    let stateRadius = circle.radius;
+                    let arrowDistance = Math.sqrt(
+                        Math.pow(arrow.x - circle.x, 2) +
+                            Math.pow(arrow.y - circle.y, 2)
+                    );
+                    console.log("state radius: " + stateRadius);
+                    if (arrowDistance <= stateRadius) {
+                        console.log(
+                            "transition " +
+                                transitionIndex +
+                                " in state: " +
+                                stateIndex
+                        );
+                        this.transitionInState[transitionIndex] = true;
+                        this.transitionToState[transitionIndex] = stateIndex;
+                        skip = true;
+                    } else {
+                        console.log(
+                            "transition " +
+                                transitionIndex +
+                                " not in state: " +
+                                stateIndex
+                        );
+                        if (!skip) {
+                            this.transitionInState[transitionIndex] = false;
+                            this.transitionToState[transitionIndex] = -1;
+                            transition.setEndIndex(-1);
+                        }
+                    }
+                });
+                console.log("total transition index: " + transitionIndex);
+                console.log(this.transitionInState);
+                console.log(this.transitionToState);
+                console.log("length: " + this.transitionInState.length);
+                console.log(this.states);
+            });
+        });
 
         // Button to show/hide state hit box
         this.hitBoxButton = this.add
@@ -158,6 +276,168 @@ export default class buildScene extends Phaser.Scene {
                 });
                 this.toggleHitBoxes = true;
             }
+        });
+        this.hitBoxText = this.add.text(1040, 400, "Boxes", {
+            color: color.STR_BLACK,
+            fontSize: "16px",
+        });
+        this.hitBoxText.setOrigin(0.5, 0.5);
+
+        // Run Button
+        this.runButton = this.add
+            .polygon(
+                1040,
+                560,
+                [50, 0, 100, 50, 50, 100, 0, 50],
+                color.NUM_YELLOW,
+                1
+            )
+            .setInteractive({ handcursor: true });
+        this.runButton.on("pointerdown", () => {
+            console.log("States Hit Boxes Valid: " + this.checkStateHitBixes());
+            console.log(this.statesPlaced);
+            console.log(this.statesOutOfHitBoxes);
+            console.log("Transitions Valid: " + this.checkTransitions());
+            console.log(this.transitionInState);
+            console.log(this.transitionToState);
+
+            this.showTransitionFromTo();
+        });
+        this.runText = this.add.text(1040, 560, "Run", {
+            color: color.STR_BLACK,
+            fontSize: "16px",
+        });
+        this.runText.setOrigin(0.5, 0.5);
+    }
+    public checkMinimumDistance(
+        circle1: Phaser.GameObjects.Arc,
+        circle2: Phaser.GameObjects.Arc
+    ): boolean {
+        let minDistance = stateObject.STATE_HIT_BOX * 2;
+        let xDistance = Math.abs(circle1.x - circle2.x);
+        let yDistance = Math.abs(circle1.y - circle2.y);
+        return minDistance <= xDistance || minDistance <= yDistance;
+    }
+
+    public clearStateHitBoxAudit() {
+        for (let index = 0; index < this.statesOutOfHitBoxes.length; index++) {
+            this.statesOutOfHitBoxes[index] = 0;
+        }
+    }
+
+    public checkStateHitBixes(): boolean {
+        console.log("--CHECK STATES--");
+        this.clearStateHitBoxAudit();
+        let allOutOfHitBoxes: boolean = true;
+        let stateCondition: number = this.states.length - 1;
+        for (let index1 = 0; index1 < this.states.length; index1++) {
+            let circle = this.states[index1].getState();
+            for (let index2 = index1; index2 < this.states.length; index2++) {
+                let otherCircle = this.states[index2].getState();
+                if (circle !== otherCircle) {
+                    let isMinimumDist = this.checkMinimumDistance(
+                        circle,
+                        otherCircle
+                    );
+                    //console.log("state 1: " + index1);
+                    //console.log("state 2: " + index2);
+                    if (isMinimumDist) {
+                        //console.log("outside of hit box");
+                        this.statesOutOfHitBoxes[index1]++;
+                        this.statesOutOfHitBoxes[index2]++;
+                        //console.log("MIN: " + index1 + " " + index2);
+                    } else {
+                        //console.log("inside of hit box");
+                        this.statesOutOfHitBoxes[index1]--;
+                        this.statesOutOfHitBoxes[index2]--;
+                        //console.log("NOT MIN: " + index1 + " " + index2);
+                    }
+                } else if (this.states.length == 1) {
+                    //console.log("only 1 state");
+                    this.statesOutOfHitBoxes[index1] = 0;
+                }
+            }
+        }
+        this.statesOutOfHitBoxes.forEach((count) => {
+            if (stateCondition !== count) {
+                allOutOfHitBoxes = false;
+            }
+        });
+        return allOutOfHitBoxes;
+    }
+
+    public allStatesPlaced(): boolean {
+        let allPlaced: boolean = true;
+        this.statesPlaced.forEach((isPlaced) => {
+            if (!isPlaced) {
+                allPlaced = false;
+            }
+        });
+        return allPlaced;
+    }
+
+    public checkTransitions(): boolean {
+        console.log("--CHECK TRANSITIONS--");
+        let transitionsValid: boolean = true;
+        this.transitions.forEach((transition, transitionIndex) => {
+            let arrow = transition.getEnd();
+            //console.log("arrow index: " + transitionIndex);
+            let skip: boolean = false;
+            this.states.forEach((state, stateIndex) => {
+                let circle = state.getState();
+                let stateRadius = circle.radius;
+                let arrowDistance = Math.sqrt(
+                    Math.pow(arrow.x - circle.x, 2) +
+                        Math.pow(arrow.y - circle.y, 2)
+                );
+                //console.log("state radius: " + stateRadius);
+                if (arrowDistance <= stateRadius) {
+                    /*console.log(
+                        "transition " +
+                            transitionIndex +
+                            " in state: " +
+                            stateIndex
+                    );*/
+                    this.transitionInState[transitionIndex] = true;
+                    this.transitionToState[transitionIndex] = stateIndex;
+                    transition.setEndIndex(stateIndex);
+                    skip = true;
+                } else {
+                    /*console.log(
+                        "transition " +
+                            transitionIndex +
+                            " not in state: " +
+                            stateIndex
+                    );*/
+                    if (!skip) {
+                        this.transitionInState[transitionIndex] = false;
+                        this.transitionToState[transitionIndex] = -1;
+                        transition.setEndIndex(-1);
+                    }
+                }
+            });
+            /*
+            console.log("total transition index: " + transitionIndex);
+            console.log(this.transitionInState);
+            console.log(this.transitionToState);
+            console.log("length: " + this.transitionInState.length);
+            console.log(this.states);
+            */
+        });
+        this.transitionToState.forEach((index) => {
+            if (index === -1) {
+                transitionsValid = false;
+            }
+        });
+        return transitionsValid;
+    }
+
+    public showTransitionFromTo() {
+        this.transitions.forEach((transition) => {
+            let start = transition.getStartIndex();
+            let end = transition.getEndIndex();
+            let input = transition.getInput();
+            console.log(start + " " + input + " " + end);
         });
     }
 }

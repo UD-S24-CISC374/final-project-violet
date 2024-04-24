@@ -13,6 +13,9 @@ export class transitionObject {
     private line: Phaser.GameObjects.Graphics;
     private input: Phaser.GameObjects.Text;
 
+    private startIndex: number;
+    private endIndex: number;
+
     private startTransition: boolean;
     private isDragging: boolean;
     private loop: boolean;
@@ -192,6 +195,22 @@ export class transitionObject {
         return this.end;
     }
 
+    public setStartIndex(startIndex: number): void {
+        this.startIndex = startIndex;
+    }
+
+    public getStartIndex(): number {
+        return this.startIndex;
+    }
+
+    public setEndIndex(endIndex: number): void {
+        this.endIndex = endIndex;
+    }
+
+    public getEndIndex(): number {
+        return this.endIndex;
+    }
+
     public setLoop(loop: boolean): void {
         this.loop = loop;
     }
@@ -202,7 +221,7 @@ export class transitionObject {
 
     public setStartTransition(startTransition: boolean): void {
         this.startTransition = startTransition;
-        console.log("transition made start: " + this.startTransition);
+        //console.log("transition made start: " + this.startTransition);
     }
 
     public getStartTranstition(): boolean {
@@ -213,17 +232,31 @@ export class transitionObject {
         return lower + (higher - lower) * weight;
     }
 
+    public showDistance(state: Phaser.GameObjects.Arc) {
+        let startDist = Math.sqrt(
+            Math.pow(this.start.x - state.x, 2) +
+                Math.pow(this.start.y - state.y, 2)
+        );
+        let endDist = Math.sqrt(
+            Math.pow(this.end.x - state.x, 2) +
+                Math.pow(this.end.y - state.y, 2)
+        );
+        console.log("start distance: " + startDist);
+        console.log("end distance: " + endDist);
+        console.log("state radius: " + state.radius);
+    }
+
     public updateLine(): void {
-        console.log("-Updating Line!");
-        console.log("Is start transition: " + this.startTransition);
+        //console.log("-Updating Line!");
+        //console.log("Is start transition: " + this.startTransition);
         let distance: number = Math.sqrt(
             Math.pow(this.end.x - this.start.x, 2) +
                 Math.pow(this.end.y - this.start.y, 2)
         );
-        console.log("Line Distance: " + distance);
-        console.log("Loop Condition Length: " + this.loopCondLen);
+        //console.log("Line Distance: " + distance);
+        //console.log("Loop Condition Length: " + this.loopCondLen);
         if (distance === this.loopCondLen && !this.startTransition) {
-            console.log("Transiton: Self Loop");
+            //console.log("Transiton: Self Loop");
             this.loop = true;
             let radiusArc = this.loopCondLen; //40;
             let centerX = this.start.x;
@@ -232,11 +265,16 @@ export class transitionObject {
             let endAngle = 0;
             let onCardinal = false;
 
+            /*let distRight = Math.sqrt(
+                Math.pow(this.state.x + outerOffset - this.startStart!.x, 2) +
+                    Math.pow(this.state.y - this.startStart!.y, 2)
+            );*/
+
             if (
                 this.end.x == this.start.x + this.loopCondLen &&
                 this.end.y == this.start.y
             ) {
-                console.log("Self Loop Direction: Right");
+                //console.log("Self Loop Direction: Right");
                 centerX += radiusArc * Math.sqrt(2);
                 startAngle = Phaser.Math.DegToRad(225);
                 endAngle = Phaser.Math.DegToRad(135);
@@ -245,7 +283,7 @@ export class transitionObject {
                 this.end.x == this.start.x - this.loopCondLen &&
                 this.end.y == this.start.y
             ) {
-                console.log("Self Loop Direction: Left");
+                //console.log("Self Loop Direction: Left");
                 centerX -= radiusArc * Math.sqrt(2);
                 startAngle = Phaser.Math.DegToRad(45);
                 endAngle = Phaser.Math.DegToRad(315);
@@ -254,7 +292,7 @@ export class transitionObject {
                 this.end.x == this.start.x &&
                 this.end.y == this.start.y - this.loopCondLen
             ) {
-                console.log("Self Loop Direction: Up");
+                //console.log("Self Loop Direction: Up");
                 centerY -= radiusArc * Math.sqrt(2);
                 startAngle = Phaser.Math.DegToRad(135);
                 endAngle = Phaser.Math.DegToRad(45);
@@ -263,7 +301,7 @@ export class transitionObject {
                 this.end.x == this.start.x &&
                 this.end.y == this.start.y + this.loopCondLen
             ) {
-                console.log("Self Loop Direction: Down");
+                //console.log("Self Loop Direction: Down");
                 centerY += radiusArc * Math.sqrt(2);
                 startAngle = Phaser.Math.DegToRad(315);
                 endAngle = Phaser.Math.DegToRad(225);
@@ -295,7 +333,7 @@ export class transitionObject {
                 this.end.setRotation(endAngle - Math.PI / 2);
             }
         } else {
-            console.log("Transition: Line");
+            //console.log("Transition: Line");
             if (!this.loop) {
                 if (this.isDragging && !this.startTransition) {
                     this.start.setPosition(this.startPosX, this.startPosY);
@@ -332,15 +370,16 @@ export class transitionObject {
             if (this.start.x < this.end.x) {
                 endAngle += Math.PI;
             }
-
+            this.start.setRotation(startAngle);
+            this.end.setRotation(endAngle);
+            /*
             console.log(
                 "Plus Sign Angle: " + Math.round(startAngle * (180 / Math.PI))
             );
             console.log(
                 "Greater Than Angle: " + Math.round(endAngle * (180 / Math.PI))
             );
-            this.start.setRotation(startAngle);
-            this.end.setRotation(endAngle);
+            */
         }
     }
 }
