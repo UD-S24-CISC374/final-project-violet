@@ -6,6 +6,7 @@ export default class levelScene extends Phaser.Scene {
     private buttons: Phaser.GameObjects.Text[] = [];
     private levelNum: number = 0;
     private livesCount: number = 5;
+    private currentLevelUnlocked: number = 0;
     private levelsPassed: boolean[] = [];
     constructor() {
         super({ key: "levelsScene" });
@@ -33,7 +34,7 @@ export default class levelScene extends Phaser.Scene {
         this.sceneTitle.setPadding(20).setOrigin(0.5, 0.5);
 
         // Level Button Variables
-        const numRows = 5;
+        const numRows = 6;
         const numCols = 2;
         const buttonWidth = 240;
         const buttonHeight = 80;
@@ -54,6 +55,7 @@ export default class levelScene extends Phaser.Scene {
             }
         }
         this.levelNum = 0;
+        this.currentLevelUnlocked = 0;
     }
 
     private createButton(

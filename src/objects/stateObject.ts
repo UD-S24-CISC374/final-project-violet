@@ -11,6 +11,7 @@ export class stateObject {
     private state: Phaser.GameObjects.Arc;
     private transitions: transitionObject[] = [];
     private cardinalDots: Phaser.GameObjects.Graphics[] = [];
+    private nameText: Phaser.GameObjects.Text;
     private stateHitBox: Phaser.GameObjects.Graphics;
     private scene: Phaser.Scene;
     private startTransition: transitionObject | undefined;
@@ -37,7 +38,7 @@ export class stateObject {
         this.radius = radius;
         this.stateColor = stateColor;
         this.transitions = transitions;
-        this.direction = Math.floor(Math.random() * 4);
+        this.direction = Math.round(Math.random()) * 2 + 1;
 
         //console.log(this.name + " maybe accepts");
         if (accept) {
@@ -57,6 +58,15 @@ export class stateObject {
         this.scene = scene;
         scene.input.setDraggable(this.state);
 
+        this.nameText = this.scene.add
+            .text(this.posX, this.posY, this.name, {
+                fontSize: "32px",
+                fontStyle: "bold",
+                color: color.STR_BLACK,
+            })
+            .setOrigin(0.5, 0.5)
+            .setVisible(false);
+
         this.state.on("pointerdown", () => {
             this.state.setData("isDragging", true);
         });
@@ -71,6 +81,7 @@ export class stateObject {
                         this.acceptState.x = this.state.x;
                         this.acceptState.y = this.state.y;
                     }
+                    this.nameText.setVisible(true);
                     this.updatePositions();
                     this.updateCardinalDots();
                     this.updateStateHitBox();
@@ -129,6 +140,18 @@ export class stateObject {
 
         this.hideStateHitBox();
         //this.selfLoop();
+    }
+
+    public setName(name: string): void {
+        this.name = name;
+    }
+
+    public getName(): string {
+        return this.name;
+    }
+
+    public getTransitions(): transitionObject[] {
+        return this.transitions;
     }
 
     public updateCardinalDots(): void {
@@ -309,6 +332,8 @@ export class stateObject {
     private updatePositions(): void {
         this.posX = this.state.x;
         this.posY = this.state.y;
+        this.nameText.setPosition(this.posX, this.posY);
+        this.nameText.setDepth(100);
     }
     private updateTransitions(): void {
         let count: number =

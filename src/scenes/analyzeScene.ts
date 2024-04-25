@@ -23,7 +23,7 @@ export default class analyzeScene extends Phaser.Scene {
     private toggleButtons: boolean[] = [];
     private acceptButtons: boolean[] = [];
     private correctAnswers: boolean[] = [];
-    private machine: stringFSM;
+    private machineSolution: stringFSM;
 
     private toBuildButton: Phaser.GameObjects.Polygon;
 
@@ -56,7 +56,7 @@ export default class analyzeScene extends Phaser.Scene {
         this.sceneTitle.setOrigin(0.5, 0.5);
 
         // Get Level
-        this.machine = levelsFSM.getLevels()[this.levelNum];
+        this.machineSolution = levelsFSM.getLevels()[this.levelNum];
 
         // Level Number
         const level = this.add
@@ -76,7 +76,7 @@ export default class analyzeScene extends Phaser.Scene {
             .text(
                 100,
                 140,
-                `The language of strings: ${this.machine.getLanguageDescriptionFSM()}`,
+                `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
                 {
                     color: color.STR_BLACK,
                     fontSize: "24px",
@@ -90,7 +90,7 @@ export default class analyzeScene extends Phaser.Scene {
         this.add.text(
             100,
             180,
-            `Over the alphabet: ${this.machine.getAlphabetFSM()}`,
+            `Over the alphabet: ${this.machineSolution.getAlphabetFSM()}`,
             {
                 color: color.STR_BLACK,
                 fontSize: "24px",
@@ -107,9 +107,19 @@ export default class analyzeScene extends Phaser.Scene {
         const startX: number = 3 * cellSide + cellSide / 2; // Starting X position for the first button (3rd column)
         const startY: number = 3 * cellSide + cellSide / 2; // Starting Y position for the first button (3rd row)
 
+        const totalStrings: number = numRows * numCols;
+        const stringLength: number = 10;
+        const allSameLength: boolean = false;
+
         // Maching strings and accepts
-        this.madeStrings = this.machine.generateStrings(numRows * numCols); // string[]
-        this.acceptButtons = this.machine.checkStrings(this.madeStrings); // boolean[]
+        this.madeStrings = this.machineSolution.generateStrings(
+            totalStrings,
+            stringLength,
+            allSameLength
+        ); // string[]
+        this.acceptButtons = this.machineSolution.checkStrings(
+            this.madeStrings
+        ); // boolean[]
         console.log("Values: " + this.madeStrings);
         console.log("Accepting Strings: " + this.acceptButtons);
 
@@ -123,7 +133,9 @@ export default class analyzeScene extends Phaser.Scene {
                 this.stringButtons[count] = this.createToggleButton(
                     xpos,
                     ypos,
-                    this.madeStrings[count],
+                    this.madeStrings[count] === ""
+                        ? "_"
+                        : this.madeStrings[count],
                     count
                 );
                 count++;
@@ -489,11 +501,17 @@ export default class analyzeScene extends Phaser.Scene {
     }
 
     private randomizeButtonLabels(): void {
+        const stringLength: number = 10;
+        const isSameLength: boolean = false;
         this.stringButtons.forEach((button, index) => {
-            let result: string = this.machine.generateString();
-            this.acceptButtons[index] = this.machine.checkString(result);
+            let result: string = this.machineSolution.generateString(
+                stringLength,
+                isSameLength
+            );
+            this.acceptButtons[index] =
+                this.machineSolution.checkString(result);
             this.madeStrings[index] = result;
-            button.setText(result);
+            button.setText(result === "" ? "_" : result);
         });
     }
 

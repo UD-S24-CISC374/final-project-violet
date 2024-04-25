@@ -9,7 +9,8 @@ export default class buildScene extends Phaser.Scene {
     private sceneTitle: Phaser.GameObjects.Text;
     private levelNum: number = 0;
     private livesCount: number = 5;
-    private machine: stringFSM;
+    private machineSolution: stringFSM;
+    private machineSolutionAccepts: boolean[] = [];
 
     private hitBoxButton: Phaser.GameObjects.Polygon;
     private hitBoxText: Phaser.GameObjects.Text;
@@ -27,7 +28,8 @@ export default class buildScene extends Phaser.Scene {
     private transitionInState: boolean[] = [];
     private transitionToState: number[] = [];
 
-    private builtMachine: stringFSM;
+    private machineBuilt: stringFSM;
+    private machineBuiltAccepts: boolean[] = [];
 
     constructor() {
         super({ key: "buildScene" });
@@ -61,7 +63,7 @@ export default class buildScene extends Phaser.Scene {
             .setOrigin(0.5, 0.5);
 
         // Get Level
-        this.machine = levelsFSM.getLevels()[this.levelNum];
+        this.machineSolution = levelsFSM.getLevels()[this.levelNum];
 
         // Level Number
         const level = this.add
@@ -81,7 +83,7 @@ export default class buildScene extends Phaser.Scene {
             .text(
                 100,
                 140,
-                `The language of strings: ${this.machine.getLanguageDescriptionFSM()}`,
+                `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
                 {
                     color: color.STR_BLACK,
                     fontSize: "24px",
@@ -95,7 +97,7 @@ export default class buildScene extends Phaser.Scene {
         this.add.text(
             100,
             180,
-            `Over the alphabet: ${this.machine.getAlphabetFSM()}`,
+            `Over the alphabet: ${this.machineSolution.getAlphabetFSM()}`,
             {
                 color: color.STR_BLACK,
                 fontSize: "24px",
@@ -108,42 +110,46 @@ export default class buildScene extends Phaser.Scene {
         let startPosY: number = 600;
         let radius: number = 40;
         let stateDepth: number = 0;
-        let transitionDepth: number = this.machine.getStartFSM().length;
+        let transitionDepth: number = this.machineSolution.getStartFSM().length;
         let totalTransitionIndex: number = 0;
 
-        this.machine.getStatesFSM().forEach((name, stateIndex) => {
+        this.machineSolution.getStatesFSM().forEach((name, stateIndex) => {
             const theseTransitions: transitionObject[] = [];
-            this.machine.getAlphabetFSM().forEach((input, transitionIndex) => {
-                theseTransitions[transitionIndex] = new transitionObject(
-                    startPosX,
-                    startPosY,
-                    startPosX,
-                    startPosY,
-                    input,
-                    radius,
-                    this
-                );
-                theseTransitions[transitionIndex]
-                    .getStart()
-                    .setDepth(transitionDepth);
-                theseTransitions[transitionIndex]
-                    .getEnd()
-                    .setDepth(transitionDepth);
-                transitionDepth++;
+            this.machineSolution
+                .getAlphabetFSM()
+                .forEach((input, transitionIndex) => {
+                    theseTransitions[transitionIndex] = new transitionObject(
+                        startPosX,
+                        startPosY,
+                        startPosX,
+                        startPosY,
+                        input,
+                        radius,
+                        this
+                    );
+                    theseTransitions[transitionIndex]
+                        .getStart()
+                        .setDepth(transitionDepth);
+                    theseTransitions[transitionIndex]
+                        .getEnd()
+                        .setDepth(transitionDepth);
+                    transitionDepth++;
 
-                console.log("CREATING TRANSITION - state index: " + stateIndex);
-                theseTransitions[transitionIndex].setStartIndex(stateIndex);
-                theseTransitions[transitionIndex].setEndIndex(-1);
+                    console.log(
+                        "CREATING TRANSITION - state index: " + stateIndex
+                    );
+                    theseTransitions[transitionIndex].setStartIndex(stateIndex);
+                    theseTransitions[transitionIndex].setEndIndex(-1);
 
-                this.transitions[totalTransitionIndex] =
-                    theseTransitions[transitionIndex];
+                    this.transitions[totalTransitionIndex] =
+                        theseTransitions[transitionIndex];
 
-                this.transitionInState[totalTransitionIndex] = false;
-                this.transitionToState[totalTransitionIndex] = -1;
-                console.log("transition index: " + totalTransitionIndex);
-                // arrow.on("pointerup",()=>{})
-                totalTransitionIndex++;
-            });
+                    this.transitionInState[totalTransitionIndex] = false;
+                    this.transitionToState[totalTransitionIndex] = -1;
+                    console.log("transition index: " + totalTransitionIndex);
+                    // arrow.on("pointerup",()=>{})
+                    totalTransitionIndex++;
+                });
 
             this.states[stateIndex] = new stateObject(
                 name,
@@ -152,7 +158,7 @@ export default class buildScene extends Phaser.Scene {
                 radius,
                 color.NUM_YELLOW,
                 theseTransitions,
-                this.machine.stateIsAccepting(name),
+                this.machineSolution.stateIsAccepting(name),
                 this
             );
             this.statesOutOfHitBoxes[stateIndex] = 0;
@@ -294,14 +300,29 @@ export default class buildScene extends Phaser.Scene {
             )
             .setInteractive({ handcursor: true });
         this.runButton.on("pointerdown", () => {
-            console.log("States Hit Boxes Valid: " + this.checkStateHitBixes());
+            let statesValid = this.checkStates();
+            let transitionsValid = this.checkTransitions();
+            console.log("States Hit Boxes Valid: " + statesValid);
             console.log(this.statesPlaced);
             console.log(this.statesOutOfHitBoxes);
-            console.log("Transitions Valid: " + this.checkTransitions());
+            console.log("Transitions Valid: " + transitionsValid);
             console.log(this.transitionInState);
             console.log(this.transitionToState);
 
             this.showTransitionFromTo();
+
+            if (!statesValid) {
+                console.log("States invalid");
+            }
+
+            if (!transitionsValid) {
+                console.log("Transitions invalid");
+            }
+
+            if (statesValid && transitionsValid) {
+                this.parseMachine();
+                this.compareMachines();
+            }
         });
         this.runText = this.add.text(1040, 560, "Run", {
             color: color.STR_BLACK,
@@ -325,7 +346,7 @@ export default class buildScene extends Phaser.Scene {
         }
     }
 
-    public checkStateHitBixes(): boolean {
+    public checkStates(): boolean {
         console.log("--CHECK STATES--");
         this.clearStateHitBoxAudit();
         let allOutOfHitBoxes: boolean = true;
@@ -439,5 +460,90 @@ export default class buildScene extends Phaser.Scene {
             let input = transition.getInput();
             console.log(start + " " + input + " " + end);
         });
+    }
+
+    public parseMachine() {
+        let machineId: number = 0;
+        let machineDesc: string = "Player Machine";
+        let machineAlphabet: string[] = this.machineSolution.getAlphabetFSM();
+        let machineStates: string[] = this.machineSolution.getStatesFSM();
+        let machineStart: string = this.machineSolution.getStartFSM();
+        let machineAccept: string[] = this.machineSolution.getAcceptFSM();
+        let machineType: string = this.machineSolution.getType();
+        let transitionTable: string[][] = [];
+        this.states.forEach((state) => {
+            let statesTransition: string[] = [];
+            statesTransition.push(state.getName());
+            state.getTransitions().forEach((transition) => {
+                statesTransition.push(transition.getInput());
+                statesTransition.push(
+                    this.states[transition.getEndIndex()].getName()
+                );
+            });
+            console.log(statesTransition);
+            transitionTable.push(statesTransition);
+        });
+        this.machineBuilt = new stringFSM(
+            machineId,
+            machineDesc,
+            machineAlphabet,
+            machineStates,
+            machineStart,
+            machineAccept,
+            transitionTable,
+            machineType
+        );
+    }
+
+    public compareMachines() {
+        const stringCount: number = 1000;
+        const stringLength: number = 10;
+        const allSameLength: boolean = false;
+        let madeStrings: string[] = this.machineSolution.generateStrings(
+            stringCount,
+            stringLength,
+            allSameLength
+        );
+        this.machineSolutionAccepts =
+            this.machineSolution.checkStrings(madeStrings);
+        this.machineBuiltAccepts = this.machineBuilt.checkStrings(madeStrings);
+        console.log("Machine Solution: " + this.machineSolutionAccepts);
+        console.log("Machine Built: " + this.machineBuiltAccepts);
+
+        let machineBuiltCorrect: boolean = false;
+        for (let index = 0; index < stringCount; index++) {
+            if (
+                (this.machineBuiltAccepts[index] &&
+                    this.machineSolutionAccepts[index]) ||
+                (!this.machineBuiltAccepts[index] &&
+                    !this.machineSolutionAccepts[index])
+            ) {
+                machineBuiltCorrect = true;
+            } else {
+                console.log(
+                    "Incorrect simulated string: " + madeStrings[index]
+                );
+                console.log(
+                    "Solution Accepts: " + this.machineSolutionAccepts[index]
+                );
+                console.log(
+                    "Builts Accepts: " + this.machineBuiltAccepts[index]
+                );
+
+                machineBuiltCorrect = false;
+                break;
+            }
+        }
+        console.log("Machine is built correctly: " + machineBuiltCorrect);
+        if (machineBuiltCorrect) {
+            this.time.delayedCall(
+                1000,
+                () => {
+                    this.scene.start("levelsScene");
+                },
+                [],
+                this
+            );
+        }
     }
 }

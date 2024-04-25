@@ -381,5 +381,10 @@ export class transitionObject {
             );
             */
         }
+        if (!this.loop && !this.startTransition) {
+            this.start.setVisible(false);
+        } else {
+            this.start.setVisible(true);
+        }
     }
 }

@@ -8,6 +8,7 @@ export class stringFSM {
     private start: string; // start state of FSM
     private accept: string[]; // accept states of FSM
     private transitions: transitionFSM[]; // delta transitions of FSM
+    private type: string;
 
     private currentState: string; // will always begin as start
     private currentString: string; // will always begin as empty
@@ -35,6 +36,7 @@ export class stringFSM {
         this.setStartFSM(start);
         this.setAcceptFSM(accept);
         this.setTransitionsFSM(transitions, type);
+        this.setType(type);
 
         this.currentState = this.start;
         this.currentString = "";
@@ -115,6 +117,14 @@ export class stringFSM {
         this.transitions = paresedTransitions;
     }
 
+    public setType(type: string): void {
+        this.type = type;
+    }
+
+    public getType(): string {
+        return this.type;
+    }
+
     public clearCurrentString(): void {
         this.currentString = "";
     }
@@ -152,11 +162,13 @@ export class stringFSM {
         return readsInput;
     }
 
-    public generateString(): string {
+    public generateString(maxLength: number, isSameLength: boolean): string {
         this.clearCurrentString();
         this.resetCurrentState();
         this.resetMachineAccepts();
-        let count: number = Math.ceil(Math.random() * 10); // length of string
+        let count: number = isSameLength
+            ? Math.max(maxLength, 0)
+            : Math.round(Math.random() * maxLength); // length of string
         for (let index = 0; index < count; index++) {
             let inputIndex: number = Math.floor(
                 Math.random() * this.alphabet.length
@@ -167,11 +179,15 @@ export class stringFSM {
         return this.currentString;
     }
 
-    public generateStrings(count: number): string[] {
+    public generateStrings(
+        count: number,
+        maxLength: number,
+        isSameLength: boolean
+    ): string[] {
         let results: string[] = [];
         count = count < 1 ? 1 : count;
         for (let index = 0; index < count; index++) {
-            results[index] = this.generateString();
+            results[index] = this.generateString(maxLength, isSameLength);
         }
         return results;
     }
@@ -218,7 +234,7 @@ export class stringFSM {
             ) {
                 if (
                     name === this.states[stateInd] &&
-                    name == this.accept[acceptInd]
+                    name === this.accept[acceptInd]
                 ) {
                     isAccepting = true;
                     break;
