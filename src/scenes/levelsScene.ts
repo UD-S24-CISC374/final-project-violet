@@ -4,10 +4,12 @@ import { color } from "../objects/color";
 export default class levelScene extends Phaser.Scene {
     private sceneTitle: Phaser.GameObjects.Text;
     private buttons: Phaser.GameObjects.Text[] = [];
+
     private levelNum: number = 0;
     private livesCount: number = 5;
     private currentLevelUnlocked: number = 0;
     private levelsPassed: boolean[] = [];
+
     constructor() {
         super({ key: "levelsScene" });
     }
@@ -16,7 +18,17 @@ export default class levelScene extends Phaser.Scene {
         this.load.image("checker2", "assets/Checker_Background_2.png");
     }
 
-    init() {}
+    init(data: {
+        levelNum: number;
+        livesCount: number;
+        currentLevelUnlocked: number;
+        levelsPassed: boolean[];
+    }): void {
+        this.levelNum = data.levelNum;
+        this.livesCount = data.livesCount;
+        this.currentLevelUnlocked = data.currentLevelUnlocked;
+        this.levelsPassed = data.levelsPassed;
+    }
 
     create() {
         console.log("Levels Scene");

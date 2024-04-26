@@ -6,17 +6,25 @@ import { color } from "../objects/color";
 export default class analyzeScene extends Phaser.Scene {
     private levelNum: number = 0;
     private livesCount: number = 5;
-    private passedAnalyze: boolean = true;
+    private currentLevelUnlocked: number = 0;
+    private levelsPassed: boolean[] = [];
+
+    private passedAnalyze: boolean = false;
 
     private sceneTitle: Phaser.GameObjects.Text;
+
     private runButton: Phaser.GameObjects.Polygon;
     private runText: Phaser.GameObjects.Text;
+
     private restartButton: Phaser.GameObjects.Polygon;
     private restartText: Phaser.GameObjects.Text;
+
     private allButton: Phaser.GameObjects.Polygon;
     private allText: Phaser.GameObjects.Text;
+
     private noneButton: Phaser.GameObjects.Polygon;
     private noneText: Phaser.GameObjects.Text;
+
     private stringButtons: Phaser.GameObjects.Text[] = [];
     private buttonBackgrounds: Phaser.GameObjects.Rectangle[] = [];
     private madeStrings: string[] = [];
@@ -26,6 +34,9 @@ export default class analyzeScene extends Phaser.Scene {
     private machineSolution: stringFSM;
 
     private toBuildButton: Phaser.GameObjects.Polygon;
+    private toBuildText: Phaser.GameObjects.Text;
+
+    private devSkip: boolean = true;
 
     constructor() {
         super({ key: "analyzeScene" });
@@ -35,10 +46,16 @@ export default class analyzeScene extends Phaser.Scene {
         this.load.image("checker1", "assets/Checker_Background_1.png");
     }
 
-    init(data: { levelNum: number; livesCount: number }): void {
-        //this.data.set("levelNum", data.level);
+    init(data: {
+        levelNum: number;
+        livesCount: number;
+        currentLevelUnlocked: number;
+        levelsPassed: boolean[];
+    }): void {
         this.levelNum = data.levelNum;
         this.livesCount = data.livesCount;
+        this.currentLevelUnlocked = data.currentLevelUnlocked;
+        this.levelsPassed = data.levelsPassed;
     }
 
     create() {
@@ -60,36 +77,49 @@ export default class analyzeScene extends Phaser.Scene {
 
         // Level Number
         const level = this.add
-            .text(160, 120, `Level ${String(this.levelNum + 1)}`, {
+            .text(80, 80, `Level ${String(this.levelNum + 1)}`, {
                 color: color.STR_BLACK,
                 fontSize: "32px",
                 backgroundColor: color.STR_WHITE,
             })
-            .setOrigin(0.5, 0.5)
-            .setPadding(5);
+            .setPadding(10);
+        let levelScaleFactor: number = 1;
+        if (level.height > 80) {
+            levelScaleFactor = 80 / level.height;
+        } else if (level.width > 160 || level.width < 160) {
+            levelScaleFactor = 160 / level.width;
+        }
+        level.setScale(levelScaleFactor);
         console.log("Level height: " + level.height);
 
         console.log("Level: " + String(this.levelNum + 1));
 
         // Language of Level
-        const language = this.add
-            .text(
-                100,
-                140,
-                `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
-                {
-                    color: color.STR_BLACK,
-                    fontSize: "24px",
-                    backgroundColor: color.STR_WHITE,
-                }
-            )
-            .setOrigin(0.5, 0.5);
-        language.setPosition(100 + language.width / 2, 160);
+        const language = this.add.text(
+            80,
+            160,
+            `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
+            {
+                color: color.STR_BLACK,
+                fontSize: "24px",
+                backgroundColor: color.STR_WHITE,
+                wordWrap: { width: 720 },
+            }
+        );
+        //language.setPosition(100 + language.width / 2, 160);
+        let languageScaleFactor: number = 1;
+        language.setPadding(10);
+        if (language.height > 80) {
+            languageScaleFactor = 80 / language.height;
+        } else if (language.width > 720) {
+            languageScaleFactor = 720 / language.width;
+        }
+        language.setScale(languageScaleFactor);
 
         // Alphabet of Level
-        this.add.text(
-            100,
-            180,
+        const alphabet = this.add.text(
+            320,
+            80,
             `Over the alphabet: ${this.machineSolution.getAlphabetFSM()}`,
             {
                 color: color.STR_BLACK,
@@ -97,6 +127,7 @@ export default class analyzeScene extends Phaser.Scene {
                 backgroundColor: color.STR_WHITE,
             }
         );
+        alphabet.setPadding(10);
 
         // String Button Variables
         const cellSide: number = 80;
@@ -110,12 +141,14 @@ export default class analyzeScene extends Phaser.Scene {
         const totalStrings: number = numRows * numCols;
         const stringLength: number = 10;
         const allSameLength: boolean = false;
+        const allUnique: boolean = true;
 
         // Maching strings and accepts
         this.madeStrings = this.machineSolution.generateStrings(
             totalStrings,
             stringLength,
-            allSameLength
+            allSameLength,
+            allUnique
         ); // string[]
         this.acceptButtons = this.machineSolution.checkStrings(
             this.madeStrings
@@ -123,6 +156,7 @@ export default class analyzeScene extends Phaser.Scene {
         console.log("Values: " + this.madeStrings);
         console.log("Accepting Strings: " + this.acceptButtons);
 
+        this.passedAnalyze = false;
         // Create String Buttons
         let count: number = 0;
         for (let row = 0; row < numRows; row++) {
@@ -189,7 +223,7 @@ export default class analyzeScene extends Phaser.Scene {
         this.toBuildButton = this.add
             .polygon(
                 1040,
-                400,
+                440,
                 [50, 0, 100, 50, 50, 100, 0, 50],
                 color.NUM_YELLOW,
                 1
@@ -201,6 +235,19 @@ export default class analyzeScene extends Phaser.Scene {
                 livesCount: this.livesCount,
             });
         });
+        this.toBuildText = this.add
+            .text(1040, 440, "Build", {
+                color: color.STR_BLACK,
+                fontSize: "16px",
+            })
+            .setOrigin(0.5, 0.5);
+        this.setButtonEnabled(
+            this.toBuildButton,
+            this.toBuildText,
+            this.devSkip ? true : this.passedAnalyze,
+            color.NUM_DARK_GRAY,
+            color.STR_BLACK
+        );
     }
 
     public createToggleButton(
@@ -334,6 +381,7 @@ export default class analyzeScene extends Phaser.Scene {
             .setInteractive({ handcursor: true });
         this.runButton.on("pointerdown", () => {
             this.setButtonsEnabled(false);
+            let stringsCorrect: boolean = true;
             for (let index = 0; index < this.toggleButtons.length; index++) {
                 console.log(this.toggleButtons[index]);
                 if (
@@ -349,16 +397,12 @@ export default class analyzeScene extends Phaser.Scene {
                     this.stringButtons[index].setStyle({ fill: color.STR_RED });
                     this.correctAnswers[index] = false;
                     console.log("Made Red!");
+                    stringsCorrect = false;
                 }
             }
-            this.passedAnalyze = true;
-            for (let index = 0; index < this.madeStrings.length; index++) {
-                if (!this.correctAnswers[index]) {
-                    this.passedAnalyze = false;
-                    break;
-                }
+            if (stringsCorrect) {
+                this.passedAnalyze = true;
             }
-
             this.setButtonEnabled(
                 this.runButton,
                 this.runText,
@@ -370,7 +414,7 @@ export default class analyzeScene extends Phaser.Scene {
                 this.restartButton,
                 this.restartText,
                 true,
-                this.passedAnalyze ? color.NUM_GREEN : color.NUM_RED,
+                stringsCorrect ? color.NUM_LIGHT_GREEN : color.NUM_LIGHT_RED,
                 color.STR_BLACK
             );
             this.setButtonEnabled(
@@ -387,12 +431,15 @@ export default class analyzeScene extends Phaser.Scene {
                 color.NUM_DARK_GRAY,
                 color.STR_BLACK
             );
-            if (this.passedAnalyze) {
-                this.restartText
-                    .setText("Build")
-                    .setOrigin(0.5, 0.5)
-                    .setPosition(1080, 600);
-            }
+            this.setButtonEnabled(
+                this.toBuildButton,
+                this.toBuildText,
+                this.devSkip ? true : this.passedAnalyze, //this.passedAnalyze,
+                this.passedAnalyze
+                    ? color.NUM_LIGHT_GREEN
+                    : color.NUM_DARK_GRAY,
+                color.STR_BLACK
+            );
             console.log("Toggles buttons: ");
             this.restartButton.setDepth(10);
             this.restartText.setDepth(10);
@@ -422,12 +469,6 @@ export default class analyzeScene extends Phaser.Scene {
             ) // Different initial color to indicate disabled state
             .setInteractive({ useHandCursor: true })
             .on("pointerdown", () => {
-                if (this.passedAnalyze) {
-                    this.scene.start("buildScene", {
-                        levelNum: this.levelNum,
-                        livesCount: this.livesCount,
-                    });
-                }
                 this.setButtonsEnabled(true);
                 this.setButtonEnabled(
                     this.restartButton,
@@ -501,17 +542,23 @@ export default class analyzeScene extends Phaser.Scene {
     }
 
     private randomizeButtonLabels(): void {
+        const stringCount: number = this.stringButtons.length;
         const stringLength: number = 10;
         const isSameLength: boolean = false;
+        const allUnique: boolean = true;
+
+        const results: string[] = this.machineSolution.generateStrings(
+            stringCount,
+            stringLength,
+            isSameLength,
+            allUnique
+        );
         this.stringButtons.forEach((button, index) => {
-            let result: string = this.machineSolution.generateString(
-                stringLength,
-                isSameLength
+            this.acceptButtons[index] = this.machineSolution.checkString(
+                results[index]
             );
-            this.acceptButtons[index] =
-                this.machineSolution.checkString(result);
-            this.madeStrings[index] = result;
-            button.setText(result === "" ? "_" : result);
+            this.madeStrings[index] = results[index];
+            button.setText(results[index] === "" ? "_" : results[index]);
         });
     }
 

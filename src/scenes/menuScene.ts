@@ -6,6 +6,11 @@ export default class menuScene extends Phaser.Scene {
     private playButton: Phaser.GameObjects.Text;
     private exitButton: Phaser.GameObjects.Text;
 
+    private levelNum: number = 0;
+    private livesCount: number = 5;
+    private currentLevelUnlocked: number = 0;
+    private levelsPassed: boolean[] = [];
+
     constructor() {
         super({ key: "menuScene" });
     }
@@ -46,7 +51,12 @@ export default class menuScene extends Phaser.Scene {
                 this.time.delayedCall(
                     1000,
                     () => {
-                        this.scene.start("levelsScene");
+                        this.scene.start("levelsScene", {
+                            levelNum: this.levelNum,
+                            livesCount: this.livesCount,
+                            currentLevelUnlocked: this.currentLevelUnlocked,
+                            levelsPassed: this.levelsPassed,
+                        });
                     },
                     [],
                     this

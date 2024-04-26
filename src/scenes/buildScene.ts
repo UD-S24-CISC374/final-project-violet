@@ -7,10 +7,15 @@ import { stateObject } from "../objects/stateObject";
 
 export default class buildScene extends Phaser.Scene {
     private sceneTitle: Phaser.GameObjects.Text;
+
     private levelNum: number = 0;
     private livesCount: number = 5;
-    private machineSolution: stringFSM;
-    private machineSolutionAccepts: boolean[] = [];
+    private currentLevelUnlocked: number = 0;
+    private levelsPassed: boolean[] = [];
+
+    private passedBuild: boolean = false;
+
+    private devSkip: boolean = true;
 
     private hitBoxButton: Phaser.GameObjects.Polygon;
     private hitBoxText: Phaser.GameObjects.Text;
@@ -19,14 +24,19 @@ export default class buildScene extends Phaser.Scene {
     private runButton: Phaser.GameObjects.Polygon;
     private runText: Phaser.GameObjects.Text;
 
+    private toLevelsButton: Phaser.GameObjects.Polygon;
+    private toLevelsText: Phaser.GameObjects.Text;
+
     private states: stateObject[] = [];
-    //private stateDepths: number[] = [];
     private statesOutOfHitBoxes: number[] = [];
     private statesPlaced: boolean[] = [];
 
     private transitions: transitionObject[] = [];
     private transitionInState: boolean[] = [];
     private transitionToState: number[] = [];
+
+    private machineSolution: stringFSM;
+    private machineSolutionAccepts: boolean[] = [];
 
     private machineBuilt: stringFSM;
     private machineBuiltAccepts: boolean[] = [];
@@ -39,10 +49,16 @@ export default class buildScene extends Phaser.Scene {
         this.load.image("checker2", "assets/Checker_Background_2.png");
     }
 
-    init(data: { levelNum: number; livesCount: number }): void {
-        //this.data.set("levelNum", data.level);
+    init(data: {
+        levelNum: number;
+        livesCount: number;
+        currentLevelUnlocked: number;
+        levelsPassed: boolean[];
+    }): void {
         this.levelNum = data.levelNum;
         this.livesCount = data.livesCount;
+        this.currentLevelUnlocked = data.currentLevelUnlocked;
+        this.levelsPassed = data.levelsPassed;
     }
 
     create() {
@@ -67,36 +83,49 @@ export default class buildScene extends Phaser.Scene {
 
         // Level Number
         const level = this.add
-            .text(160, 120, `Level ${String(this.levelNum + 1)}`, {
+            .text(80, 80, `Level ${String(this.levelNum + 1)}`, {
                 color: color.STR_BLACK,
                 fontSize: "32px",
                 backgroundColor: color.STR_WHITE,
             })
-            .setOrigin(0.5, 0.5)
-            .setPadding(5);
+            .setPadding(10);
+        let levelScaleFactor: number = 1;
+        if (level.height > 80) {
+            levelScaleFactor = 80 / level.height;
+        } else if (level.width > 160 || level.width < 160) {
+            levelScaleFactor = 160 / level.width;
+        }
+        level.setScale(levelScaleFactor);
         console.log("Level height: " + level.height);
 
         console.log("Level: " + String(this.levelNum + 1));
 
         // Language of Level
-        const language = this.add
-            .text(
-                100,
-                140,
-                `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
-                {
-                    color: color.STR_BLACK,
-                    fontSize: "24px",
-                    backgroundColor: color.STR_WHITE,
-                }
-            )
-            .setOrigin(0.5, 0.5);
-        language.setPosition(100 + language.width / 2, 160);
+        const language = this.add.text(
+            80,
+            160,
+            `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
+            {
+                color: color.STR_BLACK,
+                fontSize: "24px",
+                backgroundColor: color.STR_WHITE,
+                wordWrap: { width: 720 },
+            }
+        );
+        //language.setPosition(100 + language.width / 2, 160);
+        let languageScaleFactor: number = 1;
+        language.setPadding(10);
+        if (language.height > 80) {
+            languageScaleFactor = 80 / language.height;
+        } else if (language.width > 720) {
+            languageScaleFactor = 720 / language.width;
+        }
+        language.setScale(languageScaleFactor);
 
         // Alphabet of Level
-        this.add.text(
-            100,
-            180,
+        const alphabet = this.add.text(
+            320,
+            80,
             `Over the alphabet: ${this.machineSolution.getAlphabetFSM()}`,
             {
                 color: color.STR_BLACK,
@@ -104,6 +133,9 @@ export default class buildScene extends Phaser.Scene {
                 backgroundColor: color.STR_WHITE,
             }
         );
+        alphabet.setPadding(10);
+
+        this.passedBuild = false;
 
         // Create multiple draggable circles
         let startPosX: number = 120;
@@ -263,10 +295,10 @@ export default class buildScene extends Phaser.Scene {
         // Button to show/hide state hit box
         this.hitBoxButton = this.add
             .polygon(
-                1040,
-                400,
+                1080,
+                600,
                 [50, 0, 100, 50, 50, 100, 0, 50],
-                color.NUM_YELLOW,
+                color.NUM_DARK_GRAY,
                 1
             )
             .setInteractive({ handcursor: true });
@@ -283,8 +315,8 @@ export default class buildScene extends Phaser.Scene {
                 this.toggleHitBoxes = true;
             }
         });
-        this.hitBoxText = this.add.text(1040, 400, "Boxes", {
-            color: color.STR_BLACK,
+        this.hitBoxText = this.add.text(1080, 600, "Boxes", {
+            color: color.STR_WHITE,
             fontSize: "16px",
         });
         this.hitBoxText.setOrigin(0.5, 0.5);
@@ -292,8 +324,8 @@ export default class buildScene extends Phaser.Scene {
         // Run Button
         this.runButton = this.add
             .polygon(
-                1040,
-                560,
+                1000,
+                600,
                 [50, 0, 100, 50, 50, 100, 0, 50],
                 color.NUM_YELLOW,
                 1
@@ -302,6 +334,7 @@ export default class buildScene extends Phaser.Scene {
         this.runButton.on("pointerdown", () => {
             let statesValid = this.checkStates();
             let transitionsValid = this.checkTransitions();
+            let allStatesPlaced = this.allStatesPlaced();
             console.log("States Hit Boxes Valid: " + statesValid);
             console.log(this.statesPlaced);
             console.log(this.statesOutOfHitBoxes);
@@ -319,17 +352,69 @@ export default class buildScene extends Phaser.Scene {
                 console.log("Transitions invalid");
             }
 
-            if (statesValid && transitionsValid) {
+            if (!allStatesPlaced) {
+                console.log("States not all placed");
+            }
+
+            if (statesValid && transitionsValid && allStatesPlaced) {
                 this.parseMachine();
                 this.compareMachines();
             }
         });
-        this.runText = this.add.text(1040, 560, "Run", {
+        this.runText = this.add.text(1000, 600, "Run", {
             color: color.STR_BLACK,
             fontSize: "16px",
         });
         this.runText.setOrigin(0.5, 0.5);
+
+        this.toLevelsButton = this.add
+            .polygon(
+                1040,
+                520,
+                [50, 0, 100, 50, 50, 100, 0, 50],
+                color.NUM_YELLOW,
+                1
+            )
+            .setInteractive({ handcursor: true });
+        this.toLevelsButton.on("pointerdown", () => {
+            this.scene.start("levelsScene", {
+                levelNum: this.levelNum,
+                livesCount: this.livesCount,
+            });
+        });
+        this.toLevelsText = this.add
+            .text(1040, 520, "Next Level", {
+                color: color.STR_BLACK,
+                fontSize: "16px",
+                wordWrap: { width: 80 },
+                align: "center",
+            })
+            .setOrigin(0.5, 0.5);
+        this.setButtonEnabled(
+            this.toLevelsButton,
+            this.toLevelsText,
+            this.devSkip ? true : this.passedBuild,
+            color.NUM_DARK_GRAY,
+            color.STR_BLACK
+        );
     }
+
+    private setButtonEnabled(
+        button: Phaser.GameObjects.Polygon | undefined,
+        text: Phaser.GameObjects.Text | undefined,
+        enabled: boolean,
+        colorFill: number,
+        colorText: string
+    ): void {
+        if (button !== undefined) {
+            button.input!.enabled = enabled;
+            button.setFillStyle(colorFill);
+        }
+        if (text !== undefined) {
+            text.setColor(colorText);
+        }
+    }
+
     public checkMinimumDistance(
         circle1: Phaser.GameObjects.Arc,
         circle2: Phaser.GameObjects.Arc
@@ -499,10 +584,12 @@ export default class buildScene extends Phaser.Scene {
         const stringCount: number = 1000;
         const stringLength: number = 10;
         const allSameLength: boolean = false;
+        const allUnique: boolean = true;
         let madeStrings: string[] = this.machineSolution.generateStrings(
             stringCount,
             stringLength,
-            allSameLength
+            allSameLength,
+            allUnique
         );
         this.machineSolutionAccepts =
             this.machineSolution.checkStrings(madeStrings);
@@ -511,6 +598,7 @@ export default class buildScene extends Phaser.Scene {
         console.log("Machine Built: " + this.machineBuiltAccepts);
 
         let machineBuiltCorrect: boolean = false;
+
         for (let index = 0; index < stringCount; index++) {
             if (
                 (this.machineBuiltAccepts[index] &&
@@ -529,20 +617,19 @@ export default class buildScene extends Phaser.Scene {
                 console.log(
                     "Builts Accepts: " + this.machineBuiltAccepts[index]
                 );
-
                 machineBuiltCorrect = false;
                 break;
             }
         }
         console.log("Machine is built correctly: " + machineBuiltCorrect);
         if (machineBuiltCorrect) {
-            this.time.delayedCall(
-                1000,
-                () => {
-                    this.scene.start("levelsScene");
-                },
-                [],
-                this
+            this.passedBuild = true;
+            this.setButtonEnabled(
+                this.toLevelsButton,
+                this.toLevelsText,
+                this.passedBuild,
+                color.NUM_LIGHT_GREEN,
+                color.STR_BLACK
             );
         }
     }

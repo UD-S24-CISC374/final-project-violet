@@ -182,12 +182,18 @@ export class stringFSM {
     public generateStrings(
         count: number,
         maxLength: number,
-        isSameLength: boolean
+        isSameLength: boolean,
+        allUnique: boolean
     ): string[] {
         let results: string[] = [];
         count = count < 1 ? 1 : count;
         for (let index = 0; index < count; index++) {
-            results[index] = this.generateString(maxLength, isSameLength);
+            let strWord = this.generateString(maxLength, isSameLength);
+            if (allUnique && results.includes(strWord)) {
+                index--;
+            } else {
+                results[index] = strWord;
+            }
         }
         return results;
     }
