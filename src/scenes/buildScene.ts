@@ -59,6 +59,12 @@ export default class buildScene extends Phaser.Scene {
         this.livesCount = data.livesCount;
         this.currentLevelUnlocked = data.currentLevelUnlocked;
         this.levelsPassed = data.levelsPassed;
+
+        console.log("Build Scene Initialized");
+        console.log("Level Num: " + this.levelNum);
+        console.log("Lives Count: " + this.livesCount);
+        console.log("Current Level Unlocked: " + this.currentLevelUnlocked);
+        console.log("Levels Passed: " + this.levelsPassed);
     }
 
     create() {
@@ -136,6 +142,14 @@ export default class buildScene extends Phaser.Scene {
         alphabet.setPadding(10);
 
         this.passedBuild = false;
+
+        this.states = [];
+        this.statesOutOfHitBoxes = [];
+        this.statesPlaced = [];
+
+        this.transitions = [];
+        this.transitionInState = [];
+        this.transitionToState = [];
 
         // Create multiple draggable circles
         let startPosX: number = 120;
@@ -254,7 +268,7 @@ export default class buildScene extends Phaser.Scene {
                 let skip: boolean = false;
                 this.states.forEach((state, stateIndex) => {
                     let circle = state.getState();
-                    let stateRadius = circle.radius;
+                    let stateRadius = state.getRadius();
                     let arrowDistance = Math.sqrt(
                         Math.pow(arrow.x - circle.x, 2) +
                             Math.pow(arrow.y - circle.y, 2)
@@ -267,9 +281,93 @@ export default class buildScene extends Phaser.Scene {
                                 " in state: " +
                                 stateIndex
                         );
+                        //arrow.setDepth(100);
                         this.transitionInState[transitionIndex] = true;
                         this.transitionToState[transitionIndex] = stateIndex;
                         skip = true;
+
+                        let startStateIndex = transition.getStartIndex();
+                        let startStateX =
+                            this.states[startStateIndex].getState().x;
+                        let startStateY =
+                            this.states[startStateIndex].getState().y;
+                        if (startStateIndex != stateIndex) {
+                            let distRight = Math.sqrt(
+                                Math.pow(
+                                    circle.x + stateRadius - startStateX,
+                                    2
+                                ) + Math.pow(circle.y - startStateY, 2)
+                            );
+                            let distLeft = Math.sqrt(
+                                Math.pow(
+                                    circle.x - stateRadius - startStateX,
+                                    2
+                                ) + Math.pow(circle.y - startStateY, 2)
+                            );
+                            let distUp = Math.sqrt(
+                                Math.pow(circle.x - startStateX, 2) +
+                                    Math.pow(
+                                        circle.y - stateRadius - startStateY,
+                                        2
+                                    )
+                            );
+                            let distDown = Math.sqrt(
+                                Math.pow(circle.x - startStateX, 2) +
+                                    Math.pow(
+                                        circle.y + stateRadius - startStateY,
+                                        2
+                                    )
+                            );
+
+                            console.log("TRANSITION IN STATE");
+                            console.log("distLeft: " + distLeft);
+                            console.log("distRight: " + distRight);
+                            console.log("distUp: " + distUp);
+                            console.log("distDown: " + distDown);
+
+                            if (
+                                Math.min(
+                                    distLeft,
+                                    distRight,
+                                    distUp,
+                                    distDown
+                                ) == distLeft
+                            ) {
+                                arrow!.x = circle.x - stateRadius;
+                                arrow!.y = circle.y;
+                            } else if (
+                                Math.min(
+                                    distLeft,
+                                    distRight,
+                                    distUp,
+                                    distDown
+                                ) == distRight
+                            ) {
+                                arrow!.x = circle.x + stateRadius;
+                                arrow!.y = circle.y;
+                            } else if (
+                                Math.min(
+                                    distLeft,
+                                    distRight,
+                                    distUp,
+                                    distDown
+                                ) == distUp
+                            ) {
+                                arrow!.x = circle.x;
+                                arrow!.y = circle.y - stateRadius;
+                            } else if (
+                                Math.min(
+                                    distLeft,
+                                    distRight,
+                                    distUp,
+                                    distDown
+                                ) == distDown
+                            ) {
+                                arrow!.x = circle.x;
+                                arrow!.y = circle.y + stateRadius;
+                            }
+                            transition.updateLine();
+                        }
                     } else {
                         console.log(
                             "transition " +
@@ -354,6 +452,7 @@ export default class buildScene extends Phaser.Scene {
 
             if (!allStatesPlaced) {
                 console.log("States not all placed");
+                console.log(this.statesPlaced);
             }
 
             if (statesValid && transitionsValid && allStatesPlaced) {
@@ -380,6 +479,10 @@ export default class buildScene extends Phaser.Scene {
             this.scene.start("levelsScene", {
                 levelNum: this.levelNum,
                 livesCount: this.livesCount,
+                currentLevelUnlocked: this.levelsPassed[this.levelNum]
+                    ? this.currentLevelUnlocked + 1
+                    : this.currentLevelUnlocked,
+                levelsPassed: this.levelsPassed,
             });
         });
         this.toLevelsText = this.add
@@ -445,21 +548,21 @@ export default class buildScene extends Phaser.Scene {
                         circle,
                         otherCircle
                     );
-                    //console.log("state 1: " + index1);
-                    //console.log("state 2: " + index2);
+                    console.log("state 1: " + index1);
+                    console.log("state 2: " + index2);
                     if (isMinimumDist) {
-                        //console.log("outside of hit box");
+                        console.log("outside of hit box");
                         this.statesOutOfHitBoxes[index1]++;
                         this.statesOutOfHitBoxes[index2]++;
-                        //console.log("MIN: " + index1 + " " + index2);
+                        console.log("MIN: " + index1 + " " + index2);
                     } else {
-                        //console.log("inside of hit box");
+                        console.log("inside of hit box");
                         this.statesOutOfHitBoxes[index1]--;
                         this.statesOutOfHitBoxes[index2]--;
-                        //console.log("NOT MIN: " + index1 + " " + index2);
+                        console.log("NOT MIN: " + index1 + " " + index2);
                     }
                 } else if (this.states.length == 1) {
-                    //console.log("only 1 state");
+                    console.log("only 1 state");
                     this.statesOutOfHitBoxes[index1] = 0;
                 }
             }
@@ -491,7 +594,7 @@ export default class buildScene extends Phaser.Scene {
             let skip: boolean = false;
             this.states.forEach((state, stateIndex) => {
                 let circle = state.getState();
-                let stateRadius = circle.radius;
+                let stateRadius = state.getRadius();
                 let arrowDistance = Math.sqrt(
                     Math.pow(arrow.x - circle.x, 2) +
                         Math.pow(arrow.y - circle.y, 2)
@@ -508,6 +611,8 @@ export default class buildScene extends Phaser.Scene {
                     this.transitionToState[transitionIndex] = stateIndex;
                     transition.setEndIndex(stateIndex);
                     skip = true;
+
+                    // Place snapArrowToCircle() function
                 } else {
                     /*console.log(
                         "transition " +
@@ -622,8 +727,10 @@ export default class buildScene extends Phaser.Scene {
             }
         }
         console.log("Machine is built correctly: " + machineBuiltCorrect);
-        if (machineBuiltCorrect) {
+
+        if (machineBuiltCorrect || this.passedBuild) {
             this.passedBuild = true;
+            this.levelsPassed[this.levelNum] = true;
             this.setButtonEnabled(
                 this.toLevelsButton,
                 this.toLevelsText,
@@ -631,6 +738,16 @@ export default class buildScene extends Phaser.Scene {
                 color.NUM_LIGHT_GREEN,
                 color.STR_BLACK
             );
+        } else {
+            this.setButtonEnabled(
+                this.toLevelsButton,
+                this.toLevelsText,
+                this.passedBuild,
+                color.NUM_LIGHT_RED,
+                color.STR_BLACK
+            );
+            this.levelsPassed[this.levelNum] = false;
         }
+        console.log("Levels passed: " + this.levelsPassed);
     }
 }

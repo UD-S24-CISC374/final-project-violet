@@ -187,11 +187,22 @@ export class stringFSM {
     ): string[] {
         let results: string[] = [];
         count = count < 1 ? 1 : count;
-        for (let index = 0; index < count; index++) {
+        let duplicateCount: number = 0;
+        let duplicateLimit: number =
+            Math.pow(this.alphabet.length, this.states.length) * 20;
+        for (
+            let index = 0;
+            index < count && duplicateCount <= duplicateLimit /*||
+        (this.alphabet.length == 1 && results.length < 11)*/;
+            index++
+        ) {
             let strWord = this.generateString(maxLength, isSameLength);
             if (allUnique && results.includes(strWord)) {
+                console.log(strWord + " duplicate!");
                 index--;
+                duplicateCount++;
             } else {
+                console.log(strWord + " added!");
                 results[index] = strWord;
             }
         }
@@ -207,13 +218,19 @@ export class stringFSM {
         return this.machineAccepts;
     }
 
-    public checkString(value: string): boolean {
+    public checkString(value: string | undefined): boolean {
         this.clearCurrentString();
         this.resetCurrentState();
         this.resetMachineAccepts();
+        let length = 0;
+        if (value != undefined) {
+            length = value.length;
+        } else {
+            value = "";
+        }
         for (
             let index = 0;
-            index < value.length && this.currentState !== "";
+            index < length && this.currentState !== "";
             index++
         ) {
             let currentInput = value[index];

@@ -56,6 +56,12 @@ export default class analyzeScene extends Phaser.Scene {
         this.livesCount = data.livesCount;
         this.currentLevelUnlocked = data.currentLevelUnlocked;
         this.levelsPassed = data.levelsPassed;
+
+        console.log("Analyze Scene Initialized");
+        console.log("Level Num: " + this.levelNum);
+        console.log("Lives Count: " + this.livesCount);
+        console.log("Current Level Unlocked: " + this.currentLevelUnlocked);
+        console.log("Levels Passed: " + this.levelsPassed);
     }
 
     create() {
@@ -156,11 +162,20 @@ export default class analyzeScene extends Phaser.Scene {
         console.log("Values: " + this.madeStrings);
         console.log("Accepting Strings: " + this.acceptButtons);
 
+        this.stringButtons = [];
+        this.toggleButtons = [];
+        this.buttonBackgrounds = [];
+        this.correctAnswers = [];
+
         this.passedAnalyze = false;
         // Create String Buttons
         let count: number = 0;
         for (let row = 0; row < numRows; row++) {
-            for (let col = 0; col < numCols; col++) {
+            for (
+                let col = 0;
+                col < numCols && count < this.madeStrings.length;
+                col++
+            ) {
                 this.toggleButtons[count] = false;
                 const xpos = startX + col * widthOffset;
                 const ypos = startY + row * heightOffset;
@@ -233,6 +248,8 @@ export default class analyzeScene extends Phaser.Scene {
             this.scene.start("buildScene", {
                 levelNum: this.levelNum,
                 livesCount: this.livesCount,
+                currentLevelUnlocked: this.currentLevelUnlocked,
+                levelsPassed: this.levelsPassed,
             });
         });
         this.toBuildText = this.add
@@ -325,10 +342,14 @@ export default class analyzeScene extends Phaser.Scene {
             .setInteractive({ handcursor: true });
         this.allButton.on("pointerdown", () => {
             console.log("Toggled on all string buttons");
-            this.stringButtons.forEach((button, index) => {
-                button.setStyle({ fill: color.STR_YELLOW });
-                this.toggleButtons[index] = true;
-            });
+            this.stringButtons.forEach(
+                (button: Phaser.GameObjects.Text | undefined, index) => {
+                    if (button != undefined) {
+                        button.setStyle({ fill: color.STR_YELLOW });
+                        this.toggleButtons[index] = true;
+                    }
+                }
+            );
         });
         this.allText = this.add
             .text(xpos, ypos, "All", {
@@ -388,15 +409,27 @@ export default class analyzeScene extends Phaser.Scene {
                     (this.toggleButtons[index] && this.acceptButtons[index]) ||
                     (!this.toggleButtons[index] && !this.acceptButtons[index])
                 ) {
-                    this.stringButtons[index].setStyle({
-                        fill: color.STR_GREEN,
-                    });
+                    this.setButtonEnabled(
+                        undefined,
+                        this.stringButtons[index],
+                        false,
+                        color.NUM_BLACK,
+                        color.STR_GREEN
+                    );
                     this.correctAnswers[index] = true;
                     console.log("Made Green!");
+                    console.log("Made string: " + this.madeStrings[index]);
                 } else {
-                    this.stringButtons[index].setStyle({ fill: color.STR_RED });
+                    this.setButtonEnabled(
+                        undefined,
+                        this.stringButtons[index],
+                        false,
+                        color.NUM_BLACK,
+                        color.STR_RED
+                    );
                     this.correctAnswers[index] = false;
                     console.log("Made Red!");
+                    console.log("Made string: " + this.madeStrings[index]);
                     stringsCorrect = false;
                 }
             }
@@ -533,12 +566,18 @@ export default class analyzeScene extends Phaser.Scene {
     }
 
     private setButtonsEnabled(enabled: boolean): void {
-        this.stringButtons.forEach((button) => {
-            button.input!.enabled = enabled;
-            button.setStyle({
-                color: enabled ? color.STR_BLACK : color.STR_GRAY,
-            });
-        });
+        console.log("String button objects: " + this.stringButtons);
+        this.stringButtons.forEach(
+            (button: Phaser.GameObjects.Text | undefined) => {
+                if (button !== undefined) {
+                    console.log("String button text: " + button.text);
+                    button!.input!.enabled = enabled;
+                    button.setStyle({
+                        color: enabled ? color.STR_BLACK : color.STR_GRAY,
+                    });
+                }
+            }
+        );
     }
 
     private randomizeButtonLabels(): void {

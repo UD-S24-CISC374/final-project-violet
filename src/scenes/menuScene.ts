@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { color } from "../objects/color";
+import { levelsFSM } from "../objects/levelsFSM";
 
 export default class menuScene extends Phaser.Scene {
     private sceneText: Phaser.GameObjects.Text;
@@ -36,6 +37,10 @@ export default class menuScene extends Phaser.Scene {
             })
             .setPadding(20)
             .setOrigin(0.5, 0.5);
+
+        for (let index = 0; index < levelsFSM.getLevels().length; index++) {
+            this.levelsPassed[index] = false;
+        }
 
         // playButton to levelScene
         this.playButton = this.add

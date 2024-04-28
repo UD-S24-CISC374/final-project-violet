@@ -32,10 +32,10 @@ export class stateObject {
         accept: boolean,
         scene: Phaser.Scene
     ) {
-        this.name = name;
+        this.setName(name);
         this.posX = posX;
         this.posY = posY;
-        this.radius = radius;
+        this.setRadius(radius);
         this.stateColor = stateColor;
         this.transitions = transitions;
         this.direction = Math.round(Math.random()) * 2 + 1;
@@ -148,6 +148,14 @@ export class stateObject {
 
     public getName(): string {
         return this.name;
+    }
+
+    public setRadius(radius: number): void {
+        this.radius = Math.abs(radius);
+    }
+
+    public getRadius(): number {
+        return this.radius;
     }
 
     public getTransitions(): transitionObject[] {
