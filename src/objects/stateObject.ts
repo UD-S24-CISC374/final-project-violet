@@ -187,6 +187,30 @@ export class stateObject {
         this.stateHitBox.strokeRect(topLeftX, topLeftY, sideLength, sideLength);
     }
 
+    public invalidStateHitBoxColor() {
+        this.stateHitBox.clear();
+        this.stateHitBox.lineStyle(2, color.NUM_RED);
+        let sideLength = stateObject.STATE_HIT_BOX * 2;
+        let centerX = this.state.x;
+        let centerY = this.state.y;
+        let topLeftX = centerX - stateObject.STATE_HIT_BOX;
+        let topLeftY = centerY - stateObject.STATE_HIT_BOX;
+        this.stateHitBox.strokeRect(topLeftX, topLeftY, sideLength, sideLength);
+        console.log("Turing the hit box this color: " + color.NUM_RED);
+    }
+
+    public validStateHitBoxColor() {
+        this.stateHitBox.clear();
+        this.stateHitBox.lineStyle(2, color.NUM_BLACK);
+        let sideLength = stateObject.STATE_HIT_BOX * 2;
+        let centerX = this.state.x;
+        let centerY = this.state.y;
+        let topLeftX = centerX - stateObject.STATE_HIT_BOX;
+        let topLeftY = centerY - stateObject.STATE_HIT_BOX;
+        this.stateHitBox.strokeRect(topLeftX, topLeftY, sideLength, sideLength);
+        console.log("Turing the hit box this color: " + color.NUM_BLACK);
+    }
+
     public hideStateHitBox() {
         this.stateHitBox.setVisible(false);
     }

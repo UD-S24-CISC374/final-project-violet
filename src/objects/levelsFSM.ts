@@ -454,7 +454,7 @@ export abstract class levelsFSM {
                 ["q4", "a", "q1", "b", "q5"],
                 ["q5", "a", "q1", "b", "q6"],
                 ["q6", "a", "q6", "b", "q6"],
-                ["q7", "a", "q7", "b", "q8"],
+                ["q7", "a", "q3", "b", "q8"],
                 ["q8", "a", "q3", "b", "q6"],
             ], // delta transitions
             "DFA" // machine type
@@ -522,6 +522,42 @@ export abstract class levelsFSM {
             "DFA" // machine type
         );
 
+        const lvl2abc = new stringFSM(
+            12, // id
+            "any a's or even b's or multiple of 3 c's", // language description
+            ["a", "b", "c"], // alphabet
+            ["q0", "q1", "q2", "q3"], // states
+            "q0", // start state
+            ["q0"], // accepting states
+            [
+                ["q0", "a", "q0", "b", "q1", "c", "q2"],
+                ["q1", "a", "q1", "b", "q0", "c", "q2"],
+                ["q2", "a", "q2", "b", "q1", "c", "q3"],
+                ["q3", "a", "q3", "b", "q1", "c", "q0"],
+            ], // delta transitions
+            "DFA" // machine type
+        );
+
+        const lvl3abc = new stringFSM(
+            12, // id
+            "odd a's and odd b's ad odd c's", // language description
+            ["a", "b", "c"], // alphabet
+            ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7"], // states
+            "q0", // start state
+            ["q7"], // accepting states
+            [
+                ["q0", "a", "q1", "b", "q2", "c", "q3"],
+                ["q1", "a", "q0", "b", "q4", "c", "q5"],
+                ["q2", "a", "q4", "b", "q0", "c", "q6"],
+                ["q3", "a", "q5", "b", "q6", "c", "q0"],
+                ["q4", "a", "q2", "b", "q1", "c", "q7"],
+                ["q5", "a", "q3", "b", "q7", "c", "q1"],
+                ["q6", "a", "q7", "b", "q3", "c", "q2"],
+                ["q7", "a", "q6", "b", "q5", "c", "q4"],
+            ], // delta transitions
+            "DFA" // machine type
+        );
+
         /*
         const lvl2abc = new stringFSM(
             12, // id
@@ -572,6 +608,8 @@ export abstract class levelsFSM {
             lvl11ab,
             lvl12ab,
             lvl1abc,
+            lvl2abc,
+            lvl3abc,
         ];
         return levels;
     }

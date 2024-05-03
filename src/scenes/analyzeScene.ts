@@ -101,13 +101,14 @@ export default class analyzeScene extends Phaser.Scene {
         console.log("Level: " + String(this.levelNum + 1));
 
         // Language of Level
+        let languageFontSize: number = 24;
         const language = this.add.text(
             80,
             160,
-            `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
+            `Language description: ${this.machineSolution.getLanguageDescriptionFSM()}\nClick on the words that belong. Click "Run" then if right "Build". Click "Restart" if wrong.`,
             {
                 color: color.STR_BLACK,
-                fontSize: "24px",
+                fontSize: String(languageFontSize) + "px",
                 backgroundColor: color.STR_WHITE,
                 wordWrap: { width: 720 },
             }
@@ -117,8 +118,11 @@ export default class analyzeScene extends Phaser.Scene {
         language.setPadding(10);
         if (language.height > 80) {
             languageScaleFactor = 80 / language.height;
-        } else if (language.width > 720) {
+            language.setFontSize(languageFontSize * languageScaleFactor);
+        }
+        if (language.width > 720) {
             languageScaleFactor = 720 / language.width;
+            language.setFontSize(languageFontSize * languageScaleFactor);
         }
         language.setScale(languageScaleFactor);
 
@@ -126,7 +130,7 @@ export default class analyzeScene extends Phaser.Scene {
         const alphabet = this.add.text(
             320,
             80,
-            `Over the alphabet: ${this.machineSolution.getAlphabetFSM()}`,
+            `Alphabet: ${this.machineSolution.getAlphabetFSM()}`,
             {
                 color: color.STR_BLACK,
                 fontSize: "24px",

@@ -110,7 +110,7 @@ export default class buildScene extends Phaser.Scene {
         const language = this.add.text(
             80,
             160,
-            `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}`,
+            `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}\nDrag all the yellow cirlces to the screen, then drag all the arrows to other circles or itself. Click "Run" then if right "Build"`,
             {
                 color: color.STR_BLACK,
                 fontSize: "24px",
@@ -402,15 +402,9 @@ export default class buildScene extends Phaser.Scene {
             .setInteractive({ handcursor: true });
         this.hitBoxButton.on("pointerdown", () => {
             if (this.toggleHitBoxes) {
-                this.states.forEach((state) => {
-                    state.hideStateHitBox();
-                });
-                this.toggleHitBoxes = false;
+                this.showStatesHitBoxes();
             } else {
-                this.states.forEach((state) => {
-                    state.showStateHitBox();
-                });
-                this.toggleHitBoxes = true;
+                this.hideStatesHitBoxes();
             }
         });
         this.hitBoxText = this.add.text(1080, 600, "Boxes", {
@@ -444,6 +438,9 @@ export default class buildScene extends Phaser.Scene {
 
             if (!statesValid) {
                 console.log("States invalid");
+                this.showStatesHitBoxes();
+            } else {
+                this.hideStatesHitBoxes();
             }
 
             if (!transitionsValid) {
@@ -479,7 +476,7 @@ export default class buildScene extends Phaser.Scene {
             this.scene.start("levelsScene", {
                 levelNum: this.levelNum,
                 livesCount: this.livesCount,
-                currentLevelUnlocked: this.levelsPassed[this.levelNum]
+                currentLevelUnlocked: this.passedBuild //this.levelsPassed[this.levelNum]
                     ? this.currentLevelUnlocked + 1
                     : this.currentLevelUnlocked,
                 levelsPassed: this.levelsPassed,
@@ -567,9 +564,14 @@ export default class buildScene extends Phaser.Scene {
                 }
             }
         }
-        this.statesOutOfHitBoxes.forEach((count) => {
+        this.statesOutOfHitBoxes.forEach((count, index) => {
             if (stateCondition !== count) {
                 allOutOfHitBoxes = false;
+                this.states[index].invalidStateHitBoxColor();
+                console.log("state " + index + " hit box made red");
+            } else {
+                this.states[index].validStateHitBoxColor();
+                console.log("state " + index + " hit box made black");
             }
         });
         return allOutOfHitBoxes;
@@ -635,9 +637,14 @@ export default class buildScene extends Phaser.Scene {
             console.log(this.states);
             */
         });
-        this.transitionToState.forEach((index) => {
-            if (index === -1) {
+        this.transitionToState.forEach((toIndex, fromIndex) => {
+            if (toIndex === -1) {
                 transitionsValid = false;
+                this.transitions[fromIndex].setIsValid(false);
+                this.transitions[fromIndex].invalidTransition();
+            } else {
+                this.transitions[fromIndex].setIsValid(true);
+                this.transitions[fromIndex].validTransition();
             }
         });
         return transitionsValid;
@@ -650,6 +657,20 @@ export default class buildScene extends Phaser.Scene {
             let input = transition.getInput();
             console.log(start + " " + input + " " + end);
         });
+    }
+
+    public showStatesHitBoxes() {
+        this.states.forEach((state) => {
+            state.showStateHitBox();
+        });
+        this.toggleHitBoxes = false;
+    }
+
+    public hideStatesHitBoxes() {
+        this.states.forEach((state) => {
+            state.hideStateHitBox();
+        });
+        this.toggleHitBoxes = true;
     }
 
     public parseMachine() {

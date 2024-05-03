@@ -12,6 +12,8 @@ export class transitionObject {
     private end: Phaser.GameObjects.Text;
     private line: Phaser.GameObjects.Graphics;
     private input: Phaser.GameObjects.Text;
+    private tempLine: Phaser.GameObjects.Graphics;
+    private isValid: boolean;
 
     private startIndex: number;
     private endIndex: number;
@@ -44,6 +46,8 @@ export class transitionObject {
             lineStyle: { width: 4, color: color.NUM_BLACK },
         });
 
+        this.isValid = false;
+
         // Create text on the line
         this.input = scene.add.text(
             this.lerp(this.startPosX, this.endPosX, 0.75),
@@ -65,6 +69,9 @@ export class transitionObject {
             })
             .setInteractive()
             .setOrigin(0.5, 0.5)
+            .on("pointerdown", () => {
+                this.start.setData("isDragging", true);
+            })
             .on("pointerup", () => {
                 // Snap start position and mark it as not being dragged
                 if (!this.loop) {
@@ -88,6 +95,9 @@ export class transitionObject {
             })
             .setInteractive()
             .setOrigin(0.5, 0.5)
+            .on("pointerdown", () => {
+                this.end.setData("isDragging", true);
+            })
             .on("pointerup", () => {
                 // Snap end position and mark it as not being dragged
 
@@ -105,6 +115,7 @@ export class transitionObject {
                 }
                 this.endPosX = this.end.x;
                 this.endPosY = this.end.y;
+                this.validTransition();
                 this.updateLine();
                 this.end.setData("isDragging", false);
 
@@ -136,6 +147,7 @@ export class transitionObject {
         scene.input.setDraggable(this.end);
 
         this.updateLine();
+        this.validTransition();
 
         // Drag events
         scene.input.on(
@@ -151,15 +163,16 @@ export class transitionObject {
                 // to access properties like x and y safely.
                 if (
                     gameObject instanceof Phaser.GameObjects.Text &&
-                    (this.start === gameObject || this.end === gameObject)
+                    (this.start === gameObject || this.end === gameObject) &&
+                    (this.start.getData("isDragging") ||
+                        this.end.getData("isDragging"))
                 ) {
                     gameObject.x = dragX;
                     gameObject.y = dragY;
                     this.loop = false;
                     this.isDragging = true;
+                    this.updateLine();
                 }
-
-                this.updateLine();
             }
         );
     }
@@ -191,6 +204,14 @@ export class transitionObject {
     }
     public getEndPosY(): number {
         return this.endPosY;
+    }
+
+    public setIsValid(isValid: boolean): void {
+        this.isValid = isValid;
+    }
+
+    public getValid(): boolean {
+        return this.isValid;
     }
 
     public setText(text: Phaser.GameObjects.Text) {
@@ -385,6 +406,34 @@ export class transitionObject {
         }
     }
 
+    public invalidTransition() {
+        this.input.setColor(color.STR_RED);
+        this.end.setColor(color.STR_RED);
+        this.line.clear();
+        this.line.lineStyle(4, color.NUM_RED);
+        this.line.lineBetween(
+            this.start.x,
+            this.start.y,
+            this.end.x,
+            this.end.y
+        );
+    }
+
+    public validTransition() {
+        this.input.setColor(color.STR_BLACK);
+        this.end.setColor(color.STR_BLACK);
+        if (!this.loop) {
+            this.line.clear();
+            this.line.lineStyle(4, color.NUM_BLACK);
+            this.line.lineBetween(
+                this.start.x,
+                this.start.y,
+                this.end.x,
+                this.end.y
+            );
+        }
+    }
+
     public updateLine(): void {
         //console.log("-Updating Line!");
         //console.log("Is start transition: " + this.startTransition);
@@ -409,13 +458,7 @@ export class transitionObject {
                     this.start.setPosition(this.start.x, this.start.y);
                 }
                 this.end.setPosition(this.end.x, this.end.y);
-                this.line.clear();
-                this.line.lineBetween(
-                    this.start.x,
-                    this.start.y,
-                    this.end.x,
-                    this.end.y
-                );
+                this.validTransition();
             }
         }
 

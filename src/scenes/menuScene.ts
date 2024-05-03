@@ -12,6 +12,8 @@ export default class menuScene extends Phaser.Scene {
     private currentLevelUnlocked: number = 0;
     private levelsPassed: boolean[] = [];
 
+    private allLevelsPassed: boolean = true;
+
     constructor() {
         super({ key: "menuScene" });
     }
@@ -39,7 +41,7 @@ export default class menuScene extends Phaser.Scene {
             .setOrigin(0.5, 0.5);
 
         for (let index = 0; index < levelsFSM.getLevels().length; index++) {
-            this.levelsPassed[index] = false;
+            this.levelsPassed[index] = this.allLevelsPassed;
         }
 
         // playButton to levelScene
