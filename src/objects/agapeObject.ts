@@ -9,15 +9,21 @@ export class agapeObject {
     private eyeColor: number;
     private moodColor: number;
 
-    constructor(posX: number, posY: number) {
+    constructor(
+        posX: number,
+        posY: number,
+        cellside: number,
+        scene: Phaser.Scene
+    ) {
         // Create AGAPE EYES
-        this.cellSide = 80;
+        this.cellSide = cellside;
         this.posX = posX; //this.cellSide * 13;
         this.posY = posY; //this.cellSide * 2;
         this.eyeColor = color.NUM_DARK_GRAY; // dark gray
         this.moodColor = color.NUM_LIGHT_GREEN; // light green
+        this.scene = scene;
 
-        let crossLength: number = 80;
+        let crossLength: number = this.cellSide;
         let offset: number = crossLength;
         let radius: number = crossLength * 0.5;
 
@@ -44,17 +50,17 @@ export class agapeObject {
         xpos: number,
         ypos: number,
         color: number,
-        crossRadius: number
+        crossLength: number
     ): void {
         console.log("Xpos: " + xpos + " Ypos: " + ypos);
         const diamond = this.scene.add.graphics({
             fillStyle: { color: color },
         });
-        const path = new Phaser.Curves.Path(xpos - crossRadius, ypos);
-        path.lineTo(xpos, ypos - crossRadius);
-        path.lineTo(xpos + crossRadius, ypos);
-        path.lineTo(xpos, ypos + crossRadius);
-        path.lineTo(xpos - crossRadius, ypos);
+        const path = new Phaser.Curves.Path(xpos - crossLength, ypos);
+        path.lineTo(xpos, ypos - crossLength);
+        path.lineTo(xpos + crossLength, ypos);
+        path.lineTo(xpos, ypos + crossLength);
+        path.lineTo(xpos - crossLength, ypos);
         diamond.fillPoints(path.getPoints(), true);
     }
 

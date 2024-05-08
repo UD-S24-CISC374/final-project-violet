@@ -4,6 +4,7 @@ import { stringFSM } from "../objects/stringFSM";
 import { levelsFSM } from "../objects/levelsFSM";
 import { transitionObject } from "../objects/transitionObject";
 import { stateObject } from "../objects/stateObject";
+import { agapeObject } from "../objects/agapeObject";
 
 export default class buildScene extends Phaser.Scene {
     private sceneTitle: Phaser.GameObjects.Text;
@@ -15,7 +16,7 @@ export default class buildScene extends Phaser.Scene {
 
     private passedBuild: boolean = false;
 
-    private devSkip: boolean = true;
+    private devSkip: boolean = false;
 
     private hitBoxButton: Phaser.GameObjects.Polygon;
     private hitBoxText: Phaser.GameObjects.Text;
@@ -40,6 +41,8 @@ export default class buildScene extends Phaser.Scene {
 
     private machineBuilt: stringFSM;
     private machineBuiltAccepts: boolean[] = [];
+
+    private agape: agapeObject;
 
     constructor() {
         super({ key: "buildScene" });
@@ -132,7 +135,7 @@ export default class buildScene extends Phaser.Scene {
         const alphabet = this.add.text(
             320,
             80,
-            `Over the alphabet: ${this.machineSolution.getAlphabetFSM()}`,
+            `Alphabet: ${this.machineSolution.getAlphabetFSM()}`,
             {
                 color: color.STR_BLACK,
                 fontSize: "24px",
@@ -389,6 +392,13 @@ export default class buildScene extends Phaser.Scene {
                 console.log(this.states);
             });
         });
+
+        // Create AGAPE EYES
+        const cellSide: number = 80;
+        const AGAPE_posX: number = cellSide * 13;
+        const AGAPE_posY: number = cellSide * 2;
+
+        this.agape = new agapeObject(AGAPE_posX, AGAPE_posY, cellSide, this);
 
         // Button to show/hide state hit box
         this.hitBoxButton = this.add

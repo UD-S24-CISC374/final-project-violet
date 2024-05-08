@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { stringFSM } from "../objects/stringFSM";
 import { levelsFSM } from "../objects/levelsFSM";
 import { color } from "../objects/color";
+import { agapeObject } from "../objects/agapeObject";
 
 export default class analyzeScene extends Phaser.Scene {
     private levelNum: number = 0;
@@ -36,7 +37,9 @@ export default class analyzeScene extends Phaser.Scene {
     private toBuildButton: Phaser.GameObjects.Polygon;
     private toBuildText: Phaser.GameObjects.Text;
 
-    private devSkip: boolean = true;
+    private agape: agapeObject;
+
+    private devSkip: boolean = false;
 
     constructor() {
         super({ key: "analyzeScene" });
@@ -141,12 +144,12 @@ export default class analyzeScene extends Phaser.Scene {
 
         // String Button Variables
         const cellSide: number = 80;
-        const numRows: number = 5;
-        const numCols: number = 4;
+        const numRows: number = 4;
+        const numCols: number = 5;
         const widthOffset: number = cellSide * 2;
         const heightOffset: number = cellSide;
-        const startX: number = 3 * cellSide + cellSide / 2; // Starting X position for the first button (3rd column)
-        const startY: number = 3 * cellSide + cellSide / 2; // Starting Y position for the first button (3rd row)
+        const startX: number = 2 * cellSide + cellSide / 2; // Starting X position for the first button (3rd column)
+        const startY: number = 4 * cellSide + cellSide / 2; // Starting Y position for the first button (3rd row)
 
         const totalStrings: number = numRows * numCols;
         const stringLength: number = 10;
@@ -160,6 +163,9 @@ export default class analyzeScene extends Phaser.Scene {
             allSameLength,
             allUnique
         ); // string[]
+
+        console.log("Created Strings: " + this.madeStrings);
+
         this.acceptButtons = this.machineSolution.checkStrings(
             this.madeStrings
         ); // boolean[]
@@ -174,24 +180,29 @@ export default class analyzeScene extends Phaser.Scene {
         this.passedAnalyze = false;
         // Create String Buttons
         let count: number = 0;
+        //let offsetCount: number = 0;
         for (let row = 0; row < numRows; row++) {
-            for (
-                let col = 0;
-                col < numCols && count < this.madeStrings.length;
-                col++
-            ) {
+            for (let col = 0; col < numCols; col++) {
                 this.toggleButtons[count] = false;
                 const xpos = startX + col * widthOffset;
                 const ypos = startY + row * heightOffset;
-                this.stringButtons[count] = this.createToggleButton(
-                    xpos,
-                    ypos,
-                    this.madeStrings[count] === ""
-                        ? "_"
-                        : this.madeStrings[count],
-                    count
-                );
-                count++;
+                if (count < this.madeStrings.length) {
+                    this.stringButtons[count] = this.createToggleButton(
+                        xpos,
+                        ypos,
+                        this.madeStrings[count] === ""
+                            ? "_"
+                            : this.madeStrings[count],
+                        count
+                    );
+                    count++;
+                } else {
+                    /*
+                    this.stringButtons[count + offsetCount] = this.createToggleButton(
+
+                    );
+                    */
+                }
             }
         }
 
@@ -211,12 +222,15 @@ export default class analyzeScene extends Phaser.Scene {
         );
 
         // Create AGAPE EYES
-        const AGAPE_xpos = cellSide * 13;
-        const AGAPE_ypos = cellSide * 2;
+        const AGAPE_posX = cellSide * 13;
+        const AGAPE_posY = cellSide * 2;
+
+        this.agape = new agapeObject(AGAPE_posX, AGAPE_posY, cellSide, this);
+        /*
         const diamondColor = color.NUM_LIGHT_GREEN; // light green
         const circleColor = color.NUM_DARK_GRAY; // dark gray
 
-        let crossLength: number = 80;
+        
         let offset: number = crossLength;
         let radius: number = crossLength * 0.5;
 
@@ -238,6 +252,7 @@ export default class analyzeScene extends Phaser.Scene {
         // Create two circles, positioned to match diamonds
         this.createCircle(AGAPE_xpos - offset, AGAPE_ypos, circleColor, radius); // Left Pupil
         this.createCircle(AGAPE_xpos + offset, AGAPE_ypos, circleColor, radius); // Right Pupil
+        */
 
         this.toBuildButton = this.add
             .polygon(
@@ -596,6 +611,7 @@ export default class analyzeScene extends Phaser.Scene {
             isSameLength,
             allUnique
         );
+
         this.stringButtons.forEach((button, index) => {
             this.acceptButtons[index] = this.machineSolution.checkString(
                 results[index]

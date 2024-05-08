@@ -12,7 +12,7 @@ export default class menuScene extends Phaser.Scene {
     private currentLevelUnlocked: number = 0;
     private levelsPassed: boolean[] = [];
 
-    private allLevelsPassed: boolean = true;
+    private allLevelsPassed: boolean = false;
 
     constructor() {
         super({ key: "menuScene" });
