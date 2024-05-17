@@ -27,7 +27,7 @@ Screenshot
 ![Large Screenshot](/docs/large.png)
 
 Gameplay Video
-[![Gameplay Video](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing.jpg)](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)
+[![Gameplay Video](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing/.jpg)](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)
 
 
 Educational Game Design Document
