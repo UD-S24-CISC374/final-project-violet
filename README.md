@@ -24,7 +24,7 @@ Basic Instructions
 6. Click "Run" to see if you are correct. Green "Next Level" button means you are correct and get to click it to select the next level. Red arrows/squares, or red "Next Level" button means you are incorrect and will have to rebuild the machine again.
 
 Screenshot
-TEXT GOES HERE
+![Large Screenshot](../docs/large.png)
 
 Gameplay Video
 TEXT GOES HERE
