@@ -851,12 +851,13 @@ export default class buildScene extends Phaser.Scene {
                 machineBuiltCorrect = false;
                 this.feedback =
                     "Incorrect simulated string: " + madeStrings[index];
-
+                this.agape.worsenMood();
                 break;
             }
         }
         if (machineBuiltCorrect) {
             this.feedback = "Machine is built correctly!";
+            this.agape.setMoodNum(1);
         }
         this.agape.addDialouge(this.feedback);
         console.log("Machine is built correctly: " + machineBuiltCorrect);
