@@ -27,7 +27,7 @@ Screenshot
 ![Large Screenshot](/docs/large.png)
 
 Gameplay Video
-TEXT GOES HERE
+![Gameplay Demo Video](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)
 
 Educational Game Design Document
 Link to our [[egdd](https://github.com/UD-S24-CISC374/final-project-violet/blob/main/docs/egdd.md)](Educational Game Design Document)
