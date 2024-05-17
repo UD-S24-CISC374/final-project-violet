@@ -101,6 +101,20 @@ export class transitionObject {
             .on("pointerup", () => {
                 // Snap end position and mark it as not being dragged
 
+                let cellSize: number = 80;
+                this.end.x =
+                    this.end.x < cellSize + cellSize / 2
+                        ? cellSize + cellSize / 2
+                        : this.end.x > cellSize * 9 + cellSize / 2
+                        ? cellSize * 9 + cellSize / 2
+                        : this.end.x;
+                this.end.y =
+                    this.end.y < cellSize * 4 + cellSize / 2
+                        ? cellSize * 4 + cellSize / 2
+                        : this.end.y > cellSize * 7 + cellSize / 2
+                        ? cellSize * 7 + cellSize / 2
+                        : this.end.y;
+
                 let distance: number = Math.sqrt(
                     Math.pow(this.end.x - this.start.x, 2) +
                         Math.pow(this.end.y - this.start.y, 2)

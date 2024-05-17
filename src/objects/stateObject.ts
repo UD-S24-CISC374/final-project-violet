@@ -95,6 +95,19 @@ export class stateObject {
             "pointerup",
             () => {
                 if (this.state.getData("isDragging")) {
+                    let cellSize: number = 80;
+                    this.state.x =
+                        this.state.x < cellSize + cellSize / 2
+                            ? cellSize + cellSize / 2
+                            : this.state.x > cellSize * 9 + cellSize / 2
+                            ? cellSize * 9 + cellSize / 2
+                            : this.state.x;
+                    this.state.y =
+                        this.state.y < cellSize * 4 + cellSize / 2
+                            ? cellSize * 4 + cellSize / 2
+                            : this.state.y > cellSize * 7 + cellSize / 2
+                            ? cellSize * 7 + cellSize / 2
+                            : this.state.y;
                     this.state.x = Math.round(this.state.x / 40) * 40;
                     this.state.y = Math.round(this.state.y / 40) * 40;
                     if (this.acceptState !== undefined) {

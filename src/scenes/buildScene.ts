@@ -31,6 +31,7 @@ export default class buildScene extends Phaser.Scene {
     private states: stateObject[] = [];
     private statesOutOfHitBoxes: number[] = [];
     private statesPlaced: boolean[] = [];
+    private statesBoundary: Phaser.GameObjects.Graphics;
 
     private transitions: transitionObject[] = [];
     private transitionInState: boolean[] = [];
@@ -43,6 +44,7 @@ export default class buildScene extends Phaser.Scene {
     private machineBuiltAccepts: boolean[] = [];
 
     private agape: agapeObject;
+    private feedback: string;
 
     constructor() {
         super({ key: "buildScene" });
@@ -109,28 +111,6 @@ export default class buildScene extends Phaser.Scene {
 
         console.log("Level: " + String(this.levelNum + 1));
 
-        // Language of Level
-        const language = this.add.text(
-            80,
-            160,
-            `The language of strings: ${this.machineSolution.getLanguageDescriptionFSM()}\nDrag all the yellow cirlces to the screen, then drag all the arrows to other circles or itself. Click "Run" then if right "Build"`,
-            {
-                color: color.STR_BLACK,
-                fontSize: "24px",
-                backgroundColor: color.STR_WHITE,
-                wordWrap: { width: 720 },
-            }
-        );
-        //language.setPosition(100 + language.width / 2, 160);
-        let languageScaleFactor: number = 1;
-        language.setPadding(10);
-        if (language.height > 80) {
-            languageScaleFactor = 80 / language.height;
-        } else if (language.width > 720) {
-            languageScaleFactor = 720 / language.width;
-        }
-        language.setScale(languageScaleFactor);
-
         // Alphabet of Level
         const alphabet = this.add.text(
             320,
@@ -143,6 +123,84 @@ export default class buildScene extends Phaser.Scene {
             }
         );
         alphabet.setPadding(10);
+
+        // Language of Level
+        let languageFontSize: number = 24;
+        const language = this.add.text(
+            80,
+            160,
+            `Language Description:\n${this.machineSolution.getLanguageDescriptionFSM()}`,
+            {
+                color: color.STR_BLACK,
+                fontSize: String(languageFontSize) + "px",
+                backgroundColor: color.STR_WHITE,
+                wordWrap: { width: 720 },
+            }
+        );
+        //language.setPosition(100 + language.width / 2, 160);
+        let languageScaleFactor: number = 1;
+        language.setPadding(10);
+        let altSize: boolean = true;
+
+        while (language.width > 320 || language.height > 160) {
+            if (altSize) {
+                altSize = false;
+                languageScaleFactor = 320 / language.width;
+                language.setScale(languageScaleFactor);
+            } else {
+                altSize = true;
+                languageFontSize = languageFontSize * 0.95;
+                language.setFontSize(languageFontSize);
+            }
+        }
+
+        // Instructions
+        let instructionFontSize: number = 24;
+        const instructions = this.add.text(
+            480,
+            160,
+            `Instructions: Drag all cirlces to the screen until q0. Drag all the arrows to other circles or itself. Click "Run". If right click "Next Level".`,
+            {
+                color: color.STR_BLACK,
+                fontSize: String(instructionFontSize) + "px",
+                backgroundColor: color.STR_WHITE,
+                wordWrap: { width: 320 },
+            }
+        );
+
+        let instructionScaleFactor: number = 1;
+        instructions.setPadding(10);
+        instructions.setLineSpacing(4);
+
+        altSize = true;
+
+        while (instructions.width > 320 || instructions.height > 160) {
+            if (altSize) {
+                altSize = false;
+                instructionScaleFactor = 320 / instructions.width;
+                instructions.setScale(instructionScaleFactor);
+            } else {
+                altSize = true;
+                instructionFontSize = instructionFontSize * 0.95;
+                instructions.setFontSize(instructionFontSize);
+            }
+        }
+
+        const cellSize: number = 80;
+        let topLeftX = cellSize * 1;
+        let topLeftY = cellSize * 4;
+        let sideLengthX = cellSize * 9;
+        let sideLengthY = cellSize * 4;
+
+        this.statesBoundary = this.add.graphics({
+            lineStyle: { width: 4, color: color.NUM_BLACK },
+        });
+        this.statesBoundary.strokeRect(
+            topLeftX,
+            topLeftY,
+            sideLengthX,
+            sideLengthY
+        );
 
         this.passedBuild = false;
 
@@ -397,8 +455,18 @@ export default class buildScene extends Phaser.Scene {
         const cellSide: number = 80;
         const AGAPE_posX: number = cellSide * 13;
         const AGAPE_posY: number = cellSide * 2;
+        const enableSpeech: boolean = true;
 
-        this.agape = new agapeObject(AGAPE_posX, AGAPE_posY, cellSide, this);
+        this.agape = new agapeObject(
+            AGAPE_posX,
+            AGAPE_posY,
+            cellSide,
+            enableSpeech,
+            this
+        );
+
+        this.agape.disableSpeech();
+        this.feedback = "";
 
         // Button to show/hide state hit box
         this.hitBoxButton = this.add
@@ -446,8 +514,11 @@ export default class buildScene extends Phaser.Scene {
 
             this.showTransitionFromTo();
 
+            let errorMessages = [];
+
             if (!statesValid) {
                 console.log("States invalid");
+                errorMessages.push("States invalid.");
                 this.showStatesHitBoxes();
             } else {
                 this.hideStatesHitBoxes();
@@ -455,12 +526,31 @@ export default class buildScene extends Phaser.Scene {
 
             if (!transitionsValid) {
                 console.log("Transitions invalid");
+                errorMessages.push("Transitions invalid.");
             }
 
             if (!allStatesPlaced) {
                 console.log("States not all placed");
                 console.log(this.statesPlaced);
+                errorMessages.push("States not all placed.");
             }
+
+            let errors = "";
+
+            for (
+                let errorIndex = 0;
+                errorIndex < errorMessages.length;
+                errorIndex++
+            ) {
+                errors += errorMessages[errorIndex];
+                if (errorIndex < errorMessages.length - 1) {
+                    errors += " ";
+                }
+            }
+
+            this.feedback = errors;
+            this.agape.enableSpeech();
+            this.agape.addDialouge(this.feedback);
 
             if (statesValid && transitionsValid && allStatesPlaced) {
                 this.parseMachine();
@@ -486,9 +576,11 @@ export default class buildScene extends Phaser.Scene {
             this.scene.start("levelsScene", {
                 levelNum: this.levelNum,
                 livesCount: this.livesCount,
-                currentLevelUnlocked: this.passedBuild //this.levelsPassed[this.levelNum]
-                    ? this.currentLevelUnlocked + 1
-                    : this.currentLevelUnlocked,
+                currentLevelUnlocked:
+                    this.passedBuild &&
+                    this.currentLevelUnlocked == this.levelNum //this.levelsPassed[this.levelNum]
+                        ? this.currentLevelUnlocked + 1
+                        : this.currentLevelUnlocked,
                 levelsPassed: this.levelsPassed,
             });
         });
@@ -500,6 +592,9 @@ export default class buildScene extends Phaser.Scene {
                 align: "center",
             })
             .setOrigin(0.5, 0.5);
+        if (this.currentLevelUnlocked == -1) {
+            this.devSkip = true;
+        }
         this.setButtonEnabled(
             this.toLevelsButton,
             this.toLevelsText,
@@ -754,9 +849,16 @@ export default class buildScene extends Phaser.Scene {
                     "Builts Accepts: " + this.machineBuiltAccepts[index]
                 );
                 machineBuiltCorrect = false;
+                this.feedback =
+                    "Incorrect simulated string: " + madeStrings[index];
+
                 break;
             }
         }
+        if (machineBuiltCorrect) {
+            this.feedback = "Machine is built correctly!";
+        }
+        this.agape.addDialouge(this.feedback);
         console.log("Machine is built correctly: " + machineBuiltCorrect);
 
         if (machineBuiltCorrect || this.passedBuild) {

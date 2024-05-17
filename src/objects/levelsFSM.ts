@@ -75,24 +75,6 @@ export abstract class levelsFSM {
         );
 
         // finite state machine
-        const lvl6a = new stringFSM(
-            1, // id
-            "3 a's", // language descriptions
-            ["a"], // alphabet
-            ["q0", "q1", "q2", "q3", "q4"], // states
-            "q0", // start state
-            ["q3"], // accepting states
-            [
-                ["q0", "a", "q1"],
-                ["q1", "a", "q2"],
-                ["q2", "a", "q3"],
-                ["q3", "a", "q4"],
-                ["q4", "a", "q4"],
-            ], // delta transitions
-            "DFA" // machine type
-        );
-
-        // finite state machine
         const lvl7a = new stringFSM(
             1, // id
             "Odd a's", // language descriptions
@@ -583,7 +565,6 @@ export abstract class levelsFSM {
             lvl3a,
             lvl4a,
             lvl5a,
-            lvl6a,
             lvl7a,
             lvl8a,
             lvl9a,

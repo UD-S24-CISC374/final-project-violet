@@ -168,7 +168,8 @@ export default class levelScene extends Phaser.Scene {
                     this.setButtonEnabled(
                         undefined,
                         button,
-                        this.currentLevelUnlocked == index
+                        this.currentLevelUnlocked == index ||
+                            this.currentLevelUnlocked == -1
                             ? true
                             : this.levelsPassed[index],
                         color.NUM_BLACK,

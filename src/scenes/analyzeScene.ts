@@ -34,10 +34,14 @@ export default class analyzeScene extends Phaser.Scene {
     private correctAnswers: boolean[] = [];
     private machineSolution: stringFSM;
 
+    private readonly NUM_ROWS: number = 4;
+    private readonly NUM_COLS: number = 4;
+
     private toBuildButton: Phaser.GameObjects.Polygon;
     private toBuildText: Phaser.GameObjects.Text;
 
     private agape: agapeObject;
+    private feedback: string;
 
     private devSkip: boolean = false;
 
@@ -103,32 +107,6 @@ export default class analyzeScene extends Phaser.Scene {
 
         console.log("Level: " + String(this.levelNum + 1));
 
-        // Language of Level
-        let languageFontSize: number = 24;
-        const language = this.add.text(
-            80,
-            160,
-            `Language description: ${this.machineSolution.getLanguageDescriptionFSM()}\nClick on the words that belong. Click "Run" then if right "Build". Click "Restart" if wrong.`,
-            {
-                color: color.STR_BLACK,
-                fontSize: String(languageFontSize) + "px",
-                backgroundColor: color.STR_WHITE,
-                wordWrap: { width: 720 },
-            }
-        );
-        //language.setPosition(100 + language.width / 2, 160);
-        let languageScaleFactor: number = 1;
-        language.setPadding(10);
-        if (language.height > 80) {
-            languageScaleFactor = 80 / language.height;
-            language.setFontSize(languageFontSize * languageScaleFactor);
-        }
-        if (language.width > 720) {
-            languageScaleFactor = 720 / language.width;
-            language.setFontSize(languageFontSize * languageScaleFactor);
-        }
-        language.setScale(languageScaleFactor);
-
         // Alphabet of Level
         const alphabet = this.add.text(
             320,
@@ -142,10 +120,73 @@ export default class analyzeScene extends Phaser.Scene {
         );
         alphabet.setPadding(10);
 
+        // Language of Level
+        let languageFontSize: number = 24;
+        const language = this.add.text(
+            80,
+            160,
+            `Language Description:\n${this.machineSolution.getLanguageDescriptionFSM()}`,
+            {
+                color: color.STR_BLACK,
+                fontSize: String(languageFontSize) + "px",
+                backgroundColor: color.STR_WHITE,
+                wordWrap: { width: 320 },
+            }
+        );
+        //language.setPosition(100 + language.width / 2, 160);
+        let languageScaleFactor: number = 1;
+        language.setPadding(10);
+        language.setLineSpacing(4);
+
+        let altSize: boolean = true;
+
+        while (language.width > 320 || language.height > 160) {
+            if (altSize) {
+                altSize = false;
+                languageScaleFactor = 320 / language.width;
+                language.setScale(languageScaleFactor);
+            } else {
+                altSize = true;
+                languageFontSize = languageFontSize * 0.95;
+                language.setFontSize(languageFontSize);
+            }
+        }
+
+        let instructionFontSize: number = 24;
+        const instructions = this.add.text(
+            480,
+            160,
+            `Instructions:\nClick the strings that belong in the language. Click "Run". If correct, click "Build". If incorrect, click "Restart"`,
+            {
+                color: color.STR_BLACK,
+                fontSize: String(instructionFontSize) + "px",
+                backgroundColor: color.STR_WHITE,
+                wordWrap: { width: 320 },
+            }
+        );
+
+        let instructionScaleFactor: number = 1;
+        instructions.setPadding(10);
+        instructions.setLineSpacing(4);
+
+        altSize = true;
+
+        while (instructions.width > 320 || instructions.height > 160) {
+            if (altSize) {
+                altSize = false;
+                instructionScaleFactor = 320 / instructions.width;
+                instructions.setScale(instructionScaleFactor);
+            } else {
+                altSize = true;
+                instructionFontSize = instructionFontSize * 0.95;
+                instructions.setFontSize(instructionFontSize);
+            }
+        }
+
         // String Button Variables
         const cellSide: number = 80;
-        const numRows: number = 4;
-        const numCols: number = 5;
+        const numRows: number = this.NUM_ROWS;
+        const numCols: number = this.NUM_COLS;
         const widthOffset: number = cellSide * 2;
         const heightOffset: number = cellSide;
         const startX: number = 2 * cellSide + cellSide / 2; // Starting X position for the first button (3rd column)
@@ -180,29 +221,27 @@ export default class analyzeScene extends Phaser.Scene {
         this.passedAnalyze = false;
         // Create String Buttons
         let count: number = 0;
-        //let offsetCount: number = 0;
         for (let row = 0; row < numRows; row++) {
             for (let col = 0; col < numCols; col++) {
                 this.toggleButtons[count] = false;
                 const xpos = startX + col * widthOffset;
                 const ypos = startY + row * heightOffset;
-                if (count < this.madeStrings.length) {
-                    this.stringButtons[count] = this.createToggleButton(
-                        xpos,
-                        ypos,
-                        this.madeStrings[count] === ""
+                const strVal =
+                    count < this.madeStrings.length
+                        ? this.madeStrings[count] === ""
                             ? "_"
-                            : this.madeStrings[count],
-                        count
-                    );
-                    count++;
-                } else {
-                    /*
-                    this.stringButtons[count + offsetCount] = this.createToggleButton(
-
-                    );
-                    */
+                            : this.madeStrings[count]
+                        : "";
+                this.stringButtons[count] = this.createToggleButton(
+                    xpos,
+                    ypos,
+                    strVal,
+                    count
+                );
+                if (count >= this.madeStrings.length) {
+                    this.stringButtons[count].setVisible(false);
                 }
+                count++;
             }
         }
 
@@ -224,35 +263,19 @@ export default class analyzeScene extends Phaser.Scene {
         // Create AGAPE EYES
         const AGAPE_posX = cellSide * 13;
         const AGAPE_posY = cellSide * 2;
+        const enableSpeech: boolean = true;
 
-        this.agape = new agapeObject(AGAPE_posX, AGAPE_posY, cellSide, this);
-        /*
-        const diamondColor = color.NUM_LIGHT_GREEN; // light green
-        const circleColor = color.NUM_DARK_GRAY; // dark gray
+        this.agape = new agapeObject(
+            AGAPE_posX,
+            AGAPE_posY,
+            cellSide,
+            enableSpeech,
+            this
+        );
 
-        
-        let offset: number = crossLength;
-        let radius: number = crossLength * 0.5;
+        this.agape.disableSpeech();
 
-        console.log("Offset: " + offset);
-        // Create two diamonds
-        this.createDiamond(
-            AGAPE_xpos - offset,
-            AGAPE_ypos,
-            diamondColor,
-            crossLength
-        ); // Left Eye
-        this.createDiamond(
-            AGAPE_xpos + offset,
-            AGAPE_ypos,
-            diamondColor,
-            crossLength
-        ); // Right Eye
-
-        // Create two circles, positioned to match diamonds
-        this.createCircle(AGAPE_xpos - offset, AGAPE_ypos, circleColor, radius); // Left Pupil
-        this.createCircle(AGAPE_xpos + offset, AGAPE_ypos, circleColor, radius); // Right Pupil
-        */
+        this.feedback = "";
 
         this.toBuildButton = this.add
             .polygon(
@@ -277,6 +300,9 @@ export default class analyzeScene extends Phaser.Scene {
                 fontSize: "16px",
             })
             .setOrigin(0.5, 0.5);
+        if (this.currentLevelUnlocked == -1) {
+            this.devSkip = true;
+        }
         this.setButtonEnabled(
             this.toBuildButton,
             this.toBuildText,
@@ -421,8 +447,11 @@ export default class analyzeScene extends Phaser.Scene {
             .setInteractive({ handcursor: true });
         this.runButton.on("pointerdown", () => {
             this.setButtonsEnabled(false);
+            this.correctAnswers = [];
+            let incorrectStrings = [];
+            let incorrectCount: number = 0;
             let stringsCorrect: boolean = true;
-            for (let index = 0; index < this.toggleButtons.length; index++) {
+            for (let index = 0; index < this.madeStrings.length; index++) {
                 console.log(this.toggleButtons[index]);
                 if (
                     (this.toggleButtons[index] && this.acceptButtons[index]) ||
@@ -449,12 +478,38 @@ export default class analyzeScene extends Phaser.Scene {
                     this.correctAnswers[index] = false;
                     console.log("Made Red!");
                     console.log("Made string: " + this.madeStrings[index]);
+                    incorrectStrings[incorrectCount] = this.madeStrings[index];
+                    incorrectCount++;
                     stringsCorrect = false;
                 }
             }
+
             if (stringsCorrect) {
                 this.passedAnalyze = true;
+                this.agape.setMoodNum(1);
+                this.feedback = "Correct!";
+            } else {
+                this.agape.worsenMood();
+                console.log("Incorrect Strings: " + incorrectStrings);
+                for (
+                    let incorrectIndex = 0;
+                    incorrectIndex < incorrectStrings.length;
+                    incorrectIndex++
+                ) {
+                    let result = incorrectStrings[incorrectIndex];
+                    if (incorrectIndex < incorrectStrings.length - 1) {
+                        result += ", ";
+                    }
+                    console.log("Adding: " + result);
+                    this.feedback += result;
+                }
+                this.feedback = "Incorrect: " + this.feedback;
             }
+
+            this.agape.enableSpeech();
+            this.agape.addDialouge(this.feedback);
+            this.feedback = "";
+
             this.setButtonEnabled(
                 this.runButton,
                 this.runText,
@@ -560,6 +615,8 @@ export default class analyzeScene extends Phaser.Scene {
                 this.runText.setDepth(10);
                 this.restartButton.setDepth(1);
                 this.restartText.setDepth(1);
+
+                this.agape.disableSpeech();
             });
 
         this.restartText = this.add.text(xpos - 32, ypos - 8, "Restart", {
@@ -600,25 +657,40 @@ export default class analyzeScene extends Phaser.Scene {
     }
 
     private randomizeButtonLabels(): void {
-        const stringCount: number = this.stringButtons.length;
+        const numRows: number = this.NUM_ROWS;
+        const numCols: number = this.NUM_COLS;
+        const totalLength: number = numRows * numCols;
+
+        const stringCount: number = totalLength;
         const stringLength: number = 10;
         const isSameLength: boolean = false;
         const allUnique: boolean = true;
 
-        const results: string[] = this.machineSolution.generateStrings(
+        this.madeStrings = this.machineSolution.generateStrings(
             stringCount,
             stringLength,
             isSameLength,
             allUnique
         );
 
-        this.stringButtons.forEach((button, index) => {
-            this.acceptButtons[index] = this.machineSolution.checkString(
-                results[index]
-            );
-            this.madeStrings[index] = results[index];
-            button.setText(results[index] === "" ? "_" : results[index]);
-        });
+        this.acceptButtons = this.machineSolution.checkStrings(
+            this.madeStrings
+        );
+
+        for (let index = 0; index < totalLength; index++) {
+            let button = this.stringButtons[index];
+            if (index < this.madeStrings.length) {
+                button.setText(
+                    this.madeStrings[index] === ""
+                        ? "_"
+                        : this.madeStrings[index]
+                );
+                button.setVisible(true);
+            } else {
+                button.setText("");
+                button.setVisible(false);
+            }
+        }
     }
 
     private toggledOffAllButtons(): void {
@@ -628,7 +700,10 @@ export default class analyzeScene extends Phaser.Scene {
     }
 
     private resizeBackgrounds(): void {
-        for (let index = 0; index < this.stringButtons.length; index++) {
+        const numRows: number = this.NUM_ROWS;
+        const numCols: number = this.NUM_COLS;
+        const totalLength: number = numRows * numCols;
+        for (let index = 0; index < totalLength; index++) {
             let button = this.stringButtons[index];
             let width =
                 button.width < 40
@@ -642,31 +717,5 @@ export default class analyzeScene extends Phaser.Scene {
             this.buttonBackgrounds[index].setPosition(button.x, button.y);
             this.buttonBackgrounds[index].setSize(width, height);
         }
-    }
-
-    private createDiamond(
-        xpos: number,
-        ypos: number,
-        color: number,
-        crossRadius: number
-    ): void {
-        console.log("Xpos: " + xpos + " Ypos: " + ypos);
-        const diamond = this.add.graphics({ fillStyle: { color: color } });
-        const path = new Phaser.Curves.Path(xpos - crossRadius, ypos);
-        path.lineTo(xpos, ypos - crossRadius);
-        path.lineTo(xpos + crossRadius, ypos);
-        path.lineTo(xpos, ypos + crossRadius);
-        path.lineTo(xpos - crossRadius, ypos);
-        diamond.fillPoints(path.getPoints(), true);
-    }
-
-    private createCircle(
-        xpos: number,
-        ypos: number,
-        color: number,
-        radius: number
-    ): void {
-        const circle = this.add.graphics({ fillStyle: { color: color } });
-        circle.fillCircle(xpos, ypos, radius);
     }
 }

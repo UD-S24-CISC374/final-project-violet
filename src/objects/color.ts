@@ -13,6 +13,7 @@ export abstract class color {
     public static readonly NUM_LIGHT_YELLOW: number = 0xffd966; // AGAPE IRRITATED MOOD COLOR
     public static readonly NUM_LIGHT_RED: number = 0xe06666; // AGAPE ANGRY MOOD COLOR
     public static readonly NUM_DARK_GRAY: number = 0x696969; // AGAPE PUPIL & ALL/NONE BUTTON
+    public static readonly NUM_LIGHT_GRAY: number = 0xdddddd;
     public static readonly NUM_RED: number = 0xff0000; // FAILED ANALYZE
     public static readonly NUM_GREEN: number = 0x00ff00; // PASSED ANALYZE
 }
