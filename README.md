@@ -27,7 +27,9 @@ Screenshot
 ![Large Screenshot](/docs/large.png)
 
 Gameplay Video
-https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing
+[![Gameplay Video]([https://img.youtube.com/vi/vYD6jjKvhuI](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)/0.jpg)]([https://www.youtube.com/watch?v=vYD6jjKvhuI](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing))
+
+
 
 Educational Game Design Document
 Link to our [[egdd](https://github.com/UD-S24-CISC374/final-project-violet/blob/main/docs/egdd.md)](Educational Game Design Document)
