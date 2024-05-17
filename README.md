@@ -27,7 +27,7 @@ Screenshot
 ![Large Screenshot](/docs/large.png)
 
 Gameplay Video
-[![Gameplay Video]([https://img.youtube.com/vi/vYD6jjKvhuI](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)/0.jpg)]([https://www.youtube.com/watch?v=vYD6jjKvhuI](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing))
+[![Gameplay Video](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing/0.jpg)]([(https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing))
 
 
 
