@@ -24,10 +24,11 @@ Basic Instructions
 6. Click "Run" to see if you are correct. Green "Next Level" button means you are correct and get to click it to select the next level. Red arrows/squares, or red "Next Level" button means you are incorrect and will have to rebuild the machine again.
 
 Screenshot
-TEXT GOES HERE
+![Large Screenshot](/docs/large.png)
 
 Gameplay Video
-TEXT GOES HERE
+[![Gameplay Video](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing/.jpg)](https://drive.google.com/file/d/1aX3coUbMxIr-aNNitm2dFu5c2YYoFyrQ/view?usp=sharing)
+
 
 Educational Game Design Document
 Link to our [[egdd](https://github.com/UD-S24-CISC374/final-project-violet/blob/main/docs/egdd.md)](Educational Game Design Document)
